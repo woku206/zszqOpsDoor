@@ -1,11 +1,11 @@
 <template>
   <div class="lg:flex">
-    <Avatar :src="userinfo.avatar || headerImg" :size="72" class="!mx-auto !block" />
+    <Avatar :src="userinfo.avatar || headerImg" :size="72" class="!mx-0" />
     <div class="md:ml-6 flex flex-col justify-center md:mt-0 mt-2">
       <h1 class="md:text-lg text-md">早安, {{ userinfo.realname }}, 开始您一天的工作吧！</h1>
-      <span class="text-secondary"> 今日晴，20℃ - 32℃！ </span>
+      <!-- <span class="text-secondary"> 今日晴，20℃ - 32℃！ </span> -->
     </div>
-    <div class="flex flex-1 justify-end md:mt-0 mt-4">
+    <!-- <div class="flex flex-1 justify-end md:mt-0 mt-4">
       <div class="flex flex-col justify-center text-right">
         <span class="text-secondary"> 待办 </span>
         <span class="text-2xl">2/10</span>
@@ -19,7 +19,7 @@
         <span class="text-secondary"> 团队 </span>
         <span class="text-2xl">300</span>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 <script lang="ts" setup>

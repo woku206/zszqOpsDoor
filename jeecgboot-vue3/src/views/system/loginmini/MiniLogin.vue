@@ -3,35 +3,32 @@
     <AppLocalePicker class="absolute top-4 right-4 enter-x xl:text-gray-600" :showText="false"/>
     <AppDarkModeToggle class="absolute top-3 right-7 enter-x" />
     <div class="aui-logo" v-if="!getIsMobile">
-      <div>
+      <!-- <div>
         <h3>
           <img :src="logoImg" alt="jeecg" />
         </h3>
-      </div>
+      </div> -->
     </div>
     <div v-else class="aui-phone-logo">
       <img :src="logoImg" alt="jeecg" />
     </div>
     <div v-show="type === 'login'">
       <div class="aui-content">
-        <div class="aui-container">
-          <div class="aui-form">
-            <div class="aui-image">
-              <div class="aui-image-text">
-                <img :src="adTextImg" />
-              </div>
-            </div>
-            <div class="aui-formBox">
-              <div class="aui-formWell">
-                <div class="aui-flex aui-form-nav investment_title">
-                  <div class="aui-flex-box" :class="activeIndex === 'accountLogin' ? 'activeNav on' : ''" @click="loginClick('accountLogin')"
-                    >{{ t('sys.login.signInFormTitle') }}
-                  </div>
-                  <div class="aui-flex-box" :class="activeIndex === 'phoneLogin' ? 'activeNav on' : ''" @click="loginClick('phoneLogin')"
-                    >{{ t('sys.login.mobileSignInFormTitle') }}
+        <div class="aui-container" style="justify-content: center; width: 400px;">
+            <div class="aui-formBox" style="justify-content: center;">
+              <div class="aui-formWell" >
+                <!-- 登录 tab 居中，移除手机登录 -->
+                <div class="aui-flex aui-form-nav investment_title" style="justify-content: center">
+                  <div
+                    class="aui-flex-box activeNav on"
+                    @click="loginClick('accountLogin')"
+                  >
+                    {{ t('sys.login.signInFormTitle') }}
                   </div>
                 </div>
-                <div class="aui-form-box" style="height: 180px">
+
+                <!-- 内容容器居中 -->
+                <div class="aui-form-box" style="height: 180px; margin: 0 auto">
                   <a-form ref="loginRef" :model="formData" v-if="activeIndex === 'accountLogin'" @keyup.enter.native="loginHandleClick">
                     <div class="aui-account">
                       <div class="aui-inputClear">
@@ -91,15 +88,15 @@
                     <a-button :loading="loginLoading" class="aui-link-login" type="primary" @click="loginHandleClick">
                       {{ t('sys.login.loginButton') }}</a-button>
                   </div>
-                  <div class="aui-flex">
+                  <!-- <div class="aui-flex">
                     <a class="aui-linek-code aui-flex-box" @click="codeHandleClick">{{ t('sys.login.qrSignInFormTitle') }}</a>
-                  </div>
-                  <div class="aui-flex">
+                  </div> -->
+                  <!-- <div class="aui-flex">
                     <a class="aui-linek-code aui-flex-box" @click="registerHandleClick">{{ t('sys.login.registerButton') }}</a>
-                  </div>
+                  </div> -->
                 </div>
               </div>
-              <a-form @keyup.enter.native="loginHandleClick">
+              <!-- <a-form @keyup.enter.native="loginHandleClick">
                 <div class="aui-flex aui-third-text">
                   <div class="aui-flex-box aui-third-border">
                     <span>{{ t('sys.login.otherSignIn') }}</span>
@@ -127,8 +124,7 @@
                     </div>
                   </div>
                 </div>
-              </a-form>
-            </div>
+              </a-form> -->
           </div>
         </div>
       </div>
@@ -136,14 +132,14 @@
     <div v-show="type === 'forgot'" :class="`${prefixCls}-form`">
       <MiniForgotpad ref="forgotRef" @go-back="goBack" @success="handleSuccess" />
     </div>
-    <div v-show="type === 'register'" :class="`${prefixCls}-form`">
+    <!-- <div v-show="type === 'register'" :class="`${prefixCls}-form`">
       <MiniRegister ref="registerRef" @go-back="goBack" @success="handleSuccess" />
-    </div>
+    </div> -->
     <div v-show="type === 'codeLogin'" :class="`${prefixCls}-form`">
       <MiniCodelogin ref="codeRef" @go-back="goBack" @success="handleSuccess" />
     </div>
     <!-- 第三方登录相关弹框 -->
-    <ThirdModal ref="thirdModalRef"></ThirdModal>
+    <!-- <ThirdModal ref="thirdModalRef"></ThirdModal> -->
     
     <!-- 图片验证码弹窗 -->
     <CaptchaModal @register="captchaRegisterModal" @ok="getLoginCode" />

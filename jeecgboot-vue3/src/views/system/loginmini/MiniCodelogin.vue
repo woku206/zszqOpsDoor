@@ -3,9 +3,6 @@
     <div class="aui-container">
       <div class="aui-form">
         <div class="aui-image">
-          <div class="aui-image-text">
-            <img :src="adTextImg" alt="" />
-          </div>
         </div>
         <div class="aui-formBox aui-formEwm">
           <div class="aui-formWell">
@@ -66,8 +63,6 @@
   import { useUserStore } from '/@/store/modules/user';
   import { QrCode } from '/@/components/Qrcode/index';
   import ThirdModal from '/@/views/sys/login/ThirdModal.vue';
-  import logoImg from '/@/assets/loginmini/icon/jeecg_logo.png';
-  import adTextImg from '/@/assets/loginmini/icon/jeecg_ad_text.png';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useDesign } from "/@/hooks/web/useDesign";
   import { GithubFilled, WechatFilled, DingtalkCircleFilled, createFromIconfontCN } from '@ant-design/icons-vue';

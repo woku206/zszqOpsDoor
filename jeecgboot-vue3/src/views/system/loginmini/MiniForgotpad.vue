@@ -3,9 +3,6 @@
     <div class="aui-container">
       <div class="aui-form">
         <div class="aui-image">
-          <div class="aui-image-text">
-            <img :src="adTextImg" alt="" />
-          </div>
         </div>
         <div class="aui-formBox">
           <div class="aui-formWell">

@@ -154,9 +154,9 @@ spring:
           slow-sql-millis: 5000
       datasource:
         master:
-          url: jdbc:mysql://127.0.0.1:3306/jeecg-boot?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+          url: jdbc:mysql://127.0.0.1:3306/zszq-aiops?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
           username: root
-          password: root
+          password: 123456
           driver-class-name: com.mysql.cj.jdbc.Driver
           # 多数据源配置
           #multi-datasource1:
@@ -193,9 +193,9 @@ jeecg:
   # AI集成
   ai-chat:
     enabled: true
-    model: deepseek-chat
-    apiKey: ??
-    apiHost: https://api.deepseek.com/v1
+    model: deepseek-ai/DeepSeek-V3.1
+    apiKey: sk-rbceyxeajugaolryqclqgydlvbbhsvqotlporpnnelxtulli
+    apiHost: https://api.siliconflow.cn/v1
     timeout: 60
   # AIRag向量库
   ai-rag:
@@ -331,3 +331,8 @@ justauth:
     type: default
     prefix: 'demo::'
     timeout: 1h
+aiops:
+  alertBaseUrl: http://10.58.229.214:9091/api/v3.1/%s 
+  dataBaseUrl: http://10.58.229.214:9900/api/open/data-service/%s
+  dataApiKey: 985804c84d1e7f8ee802b92598f2af903c596b5a18abef5685fb31ad406993b7
+  alertApiKey: d344929f5d9fda86013fbdc1cb400f1f95815cc9b1ae6d9007463de38527d375

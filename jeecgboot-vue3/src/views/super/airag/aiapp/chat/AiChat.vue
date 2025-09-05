@@ -197,9 +197,7 @@
     } else {
       initChartData();
       quickCommandData.value = [
-          { name: '请介绍一下JeecgBoot', descr: "请介绍一下JeecgBoot" },
-          { name: 'JEECG有哪些优势？', descr: "JEECG有哪些优势？" },
-          { name: 'JEECG可以做哪些事情？', descr: "JEECG可以做哪些事情？" },];
+          { name: '请介绍一下浙商证券', descr: "请介绍一下浙商证券" }];
     }
     let query: any = router.currentRoute.value.query;
     source.value = query.source;
