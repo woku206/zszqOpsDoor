@@ -8,6 +8,25 @@
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
+	<profiles>
+		<profile>
+		<id>dev</id>
+		<activation><activeByDefault>true</activeByDefault></activation>
+		<dependencies>
+			<dependency>
+			<groupId>org.jeecgframework.boot</groupId>
+			<artifactId>jeecg-boot-module-airag</artifactId>
+			<version>${jeecgboot.version}</version>
+			</dependency>
+		</dependencies>
+		</profile>
+
+		<profile>
+			<id>prod</id>
+			<!-- no airag dependency -->
+		</profile>
+	</profiles>
+
 	<artifactId>jeecg-system-biz</artifactId>
 
 	<dependencies>
@@ -25,11 +44,7 @@
 		</dependency>
 
 		<!-- AI大模型管理 -->
-		<dependency>
-			<groupId>org.jeecgframework.boot</groupId>
-			<artifactId>jeecg-boot-module-airag</artifactId>
-			<version>${jeecgboot.version}</version>
-		</dependency>
+		<!-- 注意：该依赖已移动到 Maven profiles 中进行环境隔离（仅 dev/test 引入） -->
 		<!-- 企业微信/钉钉 api -->
 		<dependency>
 			<groupId>org.jeecgframework</groupId>

@@ -61,6 +61,14 @@ spring:
     host: 192.168.1.188
     port: 6379
     password: 'res983'
+# # LiteFlow配置
+# liteflow:
+#   rule-source: "xml"
+#   rule-source-ext-data: ""
+#   # 禁用SQL解析器，使用XML解析器
+#   enable: true
+#   parse-on-start: true
+
 jeecg:
   ai-rag:
     embed-store:

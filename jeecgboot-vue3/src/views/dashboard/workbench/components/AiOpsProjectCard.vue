@@ -162,7 +162,7 @@ export default defineComponent({
     async function fetchAlarmList() {
       try {
         const data = await defHttp.get({
-          url: `sys/home/myAlarmList`,
+          url: `/sys/home/myAlarmList`,
           params: {
             pageNo: 1,
             pageSize: 10,
@@ -188,7 +188,7 @@ export default defineComponent({
       loadingMap[alarmId] = true;
       try {
         const data = await defHttp.post({
-          url: `sys/home/dealAlarm`,
+          url: `/sys/home/dealAlarm`,
           data: { id: alarmId }
         });
         
@@ -228,7 +228,7 @@ export default defineComponent({
       closeLoading.value = true;
       try {
         const data = await defHttp.post({
-          url: `sys/home/closeAlarm`,
+          url: `/sys/home/closeAlarm`,
           data: { 
             id: currentAlarmId.value, 
             resolution: resolution.value 

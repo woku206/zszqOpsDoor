@@ -146,9 +146,9 @@ spring:
           slow-sql-millis: 5000
       datasource:
         master:
-          url: jdbc:mysql://127.0.0.1:3306/jeecg-boot?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+          url: jdbc:mysql://127.0.0.1:3306/zszq-aiops?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
           username: root
-          password: root
+          password: 123456
           driver-class-name: com.mysql.cj.jdbc.Driver
           # 多数据源配置
           #multi-datasource1:
@@ -325,3 +325,8 @@ justauth:
     type: default
     prefix: 'demo::'
     timeout: 1h
+aiops:
+  alertBaseUrl: http://10.56.190.109:9091/api/v3.1/%s 
+  dataBaseUrl: http://10.56.190.109:9900/api/open/data-service/%s
+  dataApiKey: ab4987ab9674fa8a20b0a20834c6244885b793443bdbdb61f90c74cce3718f49
+  alertApiKey: 6bf4493b0f57558320661a645928da919c31bc53448eb2ef379b27806328fedc
