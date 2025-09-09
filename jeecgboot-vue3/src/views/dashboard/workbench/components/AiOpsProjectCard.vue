@@ -96,7 +96,7 @@
 }
 </style>
 <script lang="ts">
-import { defineComponent, ref, onMounted, reactive } from 'vue';
+import { defineComponent, ref, onMounted, onUnmounted, reactive } from 'vue';
 import { Card, Tag, Button, Modal, message, Input } from 'ant-design-vue';
 import { EyeOutlined } from '@ant-design/icons-vue';
 import { Icon } from '/@/components/Icon';
@@ -127,6 +127,9 @@ export default defineComponent({
     
     // 按钮加载状态映射
     const loadingMap = reactive<Record<number, boolean>>({});
+    
+    // 定时器引用
+    let intervalId: number | null = null;
 
     // 告警级别映射
     function getLevelText(level: number) {
@@ -259,6 +262,18 @@ export default defineComponent({
 
     onMounted(() => {
       fetchAlarmList();
+      // 设置5秒定时器
+      intervalId = window.setInterval(() => {
+        fetchAlarmList();
+      }, 5000);
+    });
+
+    onUnmounted(() => {
+      // 清理定时器
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
     });
 
     return {
