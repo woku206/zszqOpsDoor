@@ -146,9 +146,9 @@ spring:
           slow-sql-millis: 5000
       datasource:
         master:
-          url: jdbc:mysql://127.0.0.1:3306/zszq-aiops?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+          url: jdbc:mysql://10.58.236.147:3306/aiopsmenhu?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
           username: root
-          password: 123456
+          password: Zszq@601878
           driver-class-name: com.mysql.cj.jdbc.Driver
           # 多数据源配置
           #multi-datasource1:
@@ -159,9 +159,9 @@ spring:
   #redis 配置
   redis:
     database: 0
-    host: 127.0.0.1
-    port: 6379
-    password: ''
+    host: 10.58.231.10
+    port: 10969
+    password: 'aQahj5tdWd@9grim'
 #mybatis plus 设置
 mybatis-plus:
   mapper-locations: classpath*:org/jeecg/**/xml/*Mapper.xml
@@ -185,14 +185,14 @@ jeecg:
   # AI集成
   ai-chat:
     enabled: true
-    model: deepseek-chat
-    apiKey: ??
-    apiHost: https://api.deepseek.com
+    model: deepseek-r1-0528
+    apiKey: sk-BLej1LzrjbM1XrPV5j0wiLxnr2MmmHZoR3XenYjV82Em4F0m
+    apiHost: http://10.56.88.235:9997/v1
     timeout: 60
   # AIRag向量库
   ai-rag:
     embed-store:
-      host: 127.0.0.1
+      host: 10.58.230.152
       port: 5432
       database: postgres
       user: postgres

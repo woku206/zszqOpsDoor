@@ -61,15 +61,13 @@ spring:
     host: 192.168.1.188
     port: 6379
     password: 'res983'
-# # LiteFlow配置
-# liteflow:
-#   rule-source: "xml"
-#   rule-source-ext-data: ""
-#   # 禁用SQL解析器，使用XML解析器
-#   enable: true
-#   parse-on-start: true
-
 jeecg:
+  ai-chat:
+    enabled: true
+    model: deepseek-r1-0528
+    apiKey: sk-BLej1LzrjbM1XrPV5j0wiLxnr2MmmHZoR3XenYjV82Em4F0m
+    apiHost: http://10.56.88.235:9997/v1
+    timeout: 60
   ai-rag:
     embed-store:
       host: "localhost"

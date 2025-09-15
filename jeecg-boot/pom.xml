@@ -548,7 +548,7 @@
             <id>dev</id>
             <activation>
                 <!--默认激活配置-->
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
                 <!--当前环境-->
@@ -618,7 +618,7 @@
             <id>prod</id>
             <activation>
                 <!--默认激活配置-->
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
                 <!--当前环境-->
