@@ -2,12 +2,14 @@
   <PageWrapper>
     <template #headerContent> <WorkbenchHeader /> </template>
     <div class="lg:flex gap-4 mb-6">
+      <AiOpsLinkCard :loading="loading" class="enter-y" />
+    </div>
+    <div class="lg:flex gap-4 mb-6">
       <AiOpsProjectCard :loading="loading" class="enter-y" />
         <!-- <ProjectCard :loading="loading" class="enter-y" /> -->
         <!-- <DynamicInfo :loading="loading" class="!my-4 enter-y" /> -->
       <!-- <div class="lg:w-3/10 w-full enter-y">
         <QuickNav :loading="loading" class="enter-y" />
-
         <Card class="!my-4 enter-y" :loading="loading">
           <img class="xl:h-50 h-30 mx-auto" src="../../../assets/svg/illustration.svg" />
         </Card>
@@ -24,6 +26,7 @@
   import { PageWrapper } from '/@/components/Page';
   import WorkbenchHeader from './components/WorkbenchHeader.vue';
   // import ProjectCard from './components/ProjectCard.vue';
+  import AiOpsLinkCard from './components/AiOpsLinkCard.vue';
   import AiOpsProjectCard from './components/AiOpsProjectCard.vue';
   // import QuickNav from './components/QuickNav.vue';
   // import DynamicInfo from './components/DynamicInfo.vue';
