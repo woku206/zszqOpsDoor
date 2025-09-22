@@ -28,7 +28,7 @@
                 </div>
 
                 <!-- 内容容器居中 -->
-                <div class="aui-form-box" style="height: 180px; margin: 0 auto">
+                <div class="aui-form-box" style="height: 130px; margin: 0 auto">
                   <a-form ref="loginRef" :model="formData" v-if="activeIndex === 'accountLogin'" @keyup.enter.native="loginHandleClick">
                     <div class="aui-account">
                       <div class="aui-inputClear">
@@ -43,7 +43,7 @@
                           <a-input class="fix-auto-fill" type="password" :placeholder="t('sys.login.password')" v-model:value="formData.password" />
                         </a-form-item>
                       </div>
-                      <div class="aui-inputClear">
+                      <!-- <div class="aui-inputClear">
                         <i class="icon icon-code"></i>
                         <a-form-item>
                           <a-input class="fix-auto-fill" type="text" :placeholder="t('sys.login.inputCode')" v-model:value="formData.inputCode" />
@@ -52,7 +52,7 @@
                           <img v-if="randCodeData.requestCodeSuccess" :src="randCodeData.randCodeImage" @click="handleChangeCheckCode" />
                           <img v-else style="margin-top: 2px; max-width: initial" :src="codeImg" @click="handleChangeCheckCode" />
                         </div>
-                      </div>
+                      </div> -->
                       <div class="aui-flex">
                         <div class="aui-flex-box">
                           <div class="aui-choice">
@@ -271,7 +271,7 @@
           password: formData.password,
           username: formData.username,
           captcha: formData.inputCode,
-          checkKey: randCodeData.checkKey,
+          // checkKey: randCodeData.checkKey,
           mode: 'none', //不要默认的错误提示
         })
       );

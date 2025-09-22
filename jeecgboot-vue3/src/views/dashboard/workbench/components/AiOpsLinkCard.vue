@@ -63,17 +63,17 @@ export default defineComponent({
   components: { Card },
   setup() {
     const defaultIcon = '/resource/img/logo.png';
-    const aiopsIcon = '/resource/img/AIOPS.jpeg';
-    const cmdbIcon = '/resource/img/CMDB.jpeg';
-    const itilIcon = '/resource/img/ITIL.jpeg';
+    const aiopsIcon = '/resource/img/logo-擎创.png';
+    const cmdbIcon = '/resource/img/logo-优维.png';
+    const itilIcon = '/resource/img/logo-itil.png';
     const hundunIcon = '/resource/img/混沌工程.jpeg';
-    const riyijyIcon = '/resource/img/日志易.jpeg';
-    const jizhongjiankongIcon = '/resource/img/集中监控.jpeg';
-    const liuliangfenxiIcon = '/resource/img/流量分析.jpeg';
-    const quanxianyinheIcon = '/resource/img/权限稽核.jpeg';
-    const zcloudIcon = '/resource/img/ZCLOUD.jpeg';
-    const kelaIcon = '/resource/img/科来.jpeg';
-    const hengweiIcon = '/resource/img/恒维.jpeg';
+    const riyijyIcon = '/resource/img/logo-日志易.png';
+    const jizhongjiankongIcon = '/resource/img/fio-logo.png';
+    const liuliangfenxiIcon = '/resource/img/favicon.svg';
+    const quanxianyinheIcon = '/resource/img/logo-权限稽核.png';
+    const zcloudIcon = '/resource/img/logo-zcloud.png';
+    const kelaIcon = '/resource/img/logo-科来.png';
+    const hengweiIcon = '/resource/img/logo-恒维.png';
 
 
 
