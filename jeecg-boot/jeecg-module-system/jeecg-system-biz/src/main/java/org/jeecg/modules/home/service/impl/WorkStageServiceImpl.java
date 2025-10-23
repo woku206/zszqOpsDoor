@@ -14,7 +14,8 @@ import org.jeecg.common.api.vo.Result;
 
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.util.ArrayList; 
+import java.util.List;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +37,7 @@ public class WorkStageServiceImpl implements IWorkStageService {
     @Value("${aiops.alertApiKey}")
     private  String alertApiKey;
 
-     /**
+    /**
     * 构建弱认证的请求头
     *
     * @return
@@ -182,4 +183,96 @@ public class WorkStageServiceImpl implements IWorkStageService {
         }
         return Result.error("dealAlarm filed!!!",response);
     }
-}
+
+
+    @Override
+	public Result<?> qryCmdbSystem(){
+        String url = String.format(dataBaseUrl, "getAllSystemInfo");
+        // 构建请求Header信息
+        Map<String, String> headerMap = buildWeakAuthHeader("data",dataApiKey);
+
+
+
+        AiOpsDataResponse response = new AiOpsDataResponse();
+
+        try {
+            // 构建请求参数
+            Map<String, Object> requestParamMap = new HashMap<>();
+            // 发送请求，根据API的定义构建Get或者Post请求
+            // HttpRequest httpRequest = HttpRequest.get(url);
+            HttpRequest httpRequest = HttpRequest.post(url);
+            httpRequest.headerMap(headerMap, true);
+            httpRequest.body(JSON.toJSONString(requestParamMap));
+            String result = httpRequest.execute().body();
+            // 解析返回结果并使用
+            response = JSON.parseObject(result, AiOpsDataResponse.class);
+
+            
+            if ("0000".equals(response.getCode())) {
+                System.out.println("请求成功");
+                List<String> systemNameList = new ArrayList<>();
+                for (Map<String, Object> row : response.getData().getRows()) {
+                    systemNameList.add(row.get("businessName").toString());
+                }
+                if (systemNameList.isEmpty()) {
+                    return Result.error("qryCmdbSystem failed!!!",response);
+                }
+                return Result.ok(systemNameList);
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return Result.error("qryCmdbSystem failed!!!",response);
+    }
+
+    @Override
+	public Result<?> getCmdbSystemIpList(String businessName){
+        String url = String.format(dataBaseUrl, "getSystemIpList");
+        // 构建请求Header信息
+        Map<String, String> headerMap = buildWeakAuthHeader("data",dataApiKey);
+
+
+        AiOpsDataResponse response = new AiOpsDataResponse();
+
+        try {
+            // 构建请求参数
+            String key = "systemName";
+            String  value = businessName;
+            Map<String, Object> requestParamMap = buildRequestParam(key,value);
+            // 发送请求，根据API的定义构建Get或者Post请求
+            HttpRequest httpRequest = HttpRequest.post(url);
+            httpRequest.headerMap(headerMap, true);
+            httpRequest.body(JSON.toJSONString(requestParamMap));
+
+            String result = httpRequest.execute().body();
+            // 解析返回结果并使用
+            response = JSON.parseObject(result, AiOpsDataResponse.class);
+
+            if ("0000".equals(response.getCode())) {
+                System.out.println("请求成功");
+                List<String> systemIpList = new ArrayList<>();
+
+                for (Map<String, Object> row : response.getData().getRows()) {
+                    String ipListStr = row.get("ipList").toString();
+                    // 解析JSON字符串数组
+                    try {
+                        String[] ipArray = ipListStr.replaceAll("\\[|\\]|\"", "").split(",");
+                        for (String ip : ipArray) {
+                            systemIpList.add(ip.trim());
+                        }
+                    } catch (Exception e) {
+                        // 如果解析失败，按原方式处理
+                        String[] ipList = ipListStr.split(",");
+                        for (String ip : ipList) {
+                            systemIpList.add(ip.trim());
+                        }
+                    }
+                }
+                return Result.ok(systemIpList);
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return Result.error("getCmdbSystemIpList failed!!!",response);
+    }
+}   

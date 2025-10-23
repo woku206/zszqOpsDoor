@@ -174,6 +174,7 @@ const menuList = (() => {
                                         '/dashboard/welcome/index',
                                         '/dashboard/Analysis/index',
                                         '/dashboard/workbench/index',
+                                        '/dashboard/itsm/index',
                                         '/dashboard/test/index',
                                     ][j],
                                     orderNo: j + 1,

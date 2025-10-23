@@ -24,6 +24,22 @@ const dashboard: AppRouteModule = {
       },
     },
     {
+      path: 'itsm',
+      name: 'itsm',
+      component: () => import('/@/views/dashboard/itsm/index.vue'),
+      meta: {
+        title: t('routes.dashboard.itsm'),
+      },
+    },
+    {
+      path: 'firewall',
+      name: 'firewall',
+      component: () => import('/@/views/dashboard/firewall/index.vue'),
+      meta: {
+        title: '防火墙策略开通申请',
+      },
+    },
+    {
       path: 'workbench',
       name: 'Workbench',
       component: () => import('/@/views/dashboard/workbench/index.vue'),

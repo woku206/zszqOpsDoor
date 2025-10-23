@@ -28,6 +28,18 @@ const dashboardRoute = {
       },
     },
     {
+      path: 'itsm',
+      name: 'itsm',
+      component: '/dashboard/itsm/index',
+      meta: {
+        hideMenu: true,
+        hideBreadcrumb: true,
+        title: 'routes.dashboard.itsm',
+        currentActiveMenu: '/dashboard',
+        icon: 'bx:bx-home',
+      },
+    },
+    {
       path: 'workbench',
       name: 'Workbench',
       component: '/dashboard/workbench/index',

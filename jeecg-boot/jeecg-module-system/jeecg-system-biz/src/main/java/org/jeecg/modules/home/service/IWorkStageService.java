@@ -51,4 +51,25 @@ public interface IWorkStageService{
 	 */
 	Result<?> dealAlarm(Long id);
 
+
+
+	/**
+	 * 查询应用系统信息
+	 * 
+	 * @param req
+	 * @param queryWrapper
+	 * @param pageSize
+	 * @param pageNo
+	 * @return
+	 */
+	Result<?> qryCmdbSystem();
+
+	/**
+	 * 查询应用系统相关IP列表
+	 * 
+	 * @param businessName
+	 * @return
+	 */
+	Result<?> getCmdbSystemIpList(String businessName);
+
 }

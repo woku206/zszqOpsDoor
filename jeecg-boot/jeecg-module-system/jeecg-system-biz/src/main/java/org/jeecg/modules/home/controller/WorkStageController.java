@@ -73,4 +73,26 @@ public class WorkStageController {
         return workStageService.dealAlarm(jsonObject.getLong("id"));
     }
 
+    /**
+     * 查询应用系统信息
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping(value = "/getCmdbSystem", method = RequestMethod.GET)
+    public Result<?> getCmdbSystem( HttpServletRequest req){
+        return workStageService.qryCmdbSystem();
+    }
+
+
+    /**
+     * 查询应用系统相关IP列表
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping(value = "/getCmdbSystemIpList",  method = RequestMethod.POST)
+    public Result<?> getCmdbSystemIpList(@RequestBody JSONObject jsonObject){
+        return workStageService.getCmdbSystemIpList(jsonObject.getString("businessName"));
+    }
 }
