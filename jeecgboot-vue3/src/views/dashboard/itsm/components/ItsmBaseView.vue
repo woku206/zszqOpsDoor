@@ -7,40 +7,17 @@
         <a-card class="add-knowledge-card" @click="handleProductionFirewall">
           <div class="flex">
             <Icon icon="ant-design:plus-outlined" class="add-knowledge-card-icon" size="20"></Icon>
-            <span class="add-knowledge-card-title">生产防火墙策略开通申请</span>
-          </div>
-        </a-card>
-      </a-col>
-      <a-col :xxl="4" :xl="6" :lg="6" :md="6" :sm="12" :xs="24">
-        <a-card class="add-knowledge-card" @click="handleTestFirewall">
-          <div class="flex">
-            <Icon icon="ant-design:plus-outlined" class="add-knowledge-card-icon" size="20"></Icon>
-            <span class="add-knowledge-card-title">测试防火墙策略开通申请</span>
+            <span class="add-knowledge-card-title">防火墙策略开通申请</span>
           </div>
         </a-card>
       </a-col>
     </a-row>
-    <Pagination
-      v-if="knowledgeList.length > 0"
-      :current="pageNo"
-      :page-size="pageSize"
-      :page-size-options="pageSizeOptions"
-      :total="total"
-      :showQuickJumper="true"
-      :showSizeChanger="true"
-      @change="handlePageChange"
-      class="list-footer"
-      size="small"
-      :show-total="() => `共${total}条` "
-    />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent,reactive, ref } from 'vue';
 import { useModal } from '/@/components/Modal';
-import { deleteModel, list, rebuild } from '/@/views/dashboard/itsm/components/AiKnowledgeBase.api';
-import { doDeleteAllDoc } from "/@/views/dashboard/itsm/components/AiKnowledgeBase.api.util";
 import { Pagination } from 'ant-design-vue';  
 import JInput from '@/components/Form/src/jeecg/components/JInput.vue';
 import JSelectUser from '@/components/Form/src/jeecg/components/JSelectUser.vue';
@@ -94,23 +71,13 @@ import { useRouter } from 'vue-router';
       const formRef = ref();
       const { createMessage } = useMessage();
 
-      //页面初始化执行列表查询
-      reload();
 
       /**
        * 生产防火墙策略开通申请
        */
       function handleProductionFirewall() {
         // 使用路由跳转到防火墙策略申请页面
-        router.push('/dashboard/firewall?type=production');
-      }
-
-      /**
-       * 测试防火墙策略开通申请
-       */
-      function handleTestFirewall() {
-        // 使用路由跳转到防火墙策略申请页面
-        router.push('/dashboard/firewall?type=test');
+        router.push('/dashboard/firewall');
       }
 
       /**
@@ -134,79 +101,6 @@ import { useRouter } from 'vue-router';
       }
 
       /**
-       * 重新加载数据
-       */
-      function reload() {
-        let params = {
-          pageNo: pageNo.value,
-          pageSize: pageSize.value,
-          column: 'createTime',
-          order: 'desc'
-        };
-        Object.assign(params, queryParam);
-      
-        list(params).then((res) => {
-          if (res.success) {
-            knowledgeList.value = res.result.records;
-            total.value = res.result.total;
-          } else {
-            knowledgeList.value = [];
-            total.value = 0;
-          }
-        });
-      }
-
-      /**
-       * 分页改变事件
-       * @param page
-       * @param current
-       */
-      function handlePageChange(page, current) {
-        pageNo.value = page;
-        pageSize.value = current;
-        reload();
-      }
-
-      /**
-       * 删除模型
-       * @param item
-       */
-      async function handleDelete(item) {
-        if(knowledgeList.value.length == 1 && pageNo.value > 1) {
-          pageNo.value = pageNo.value - 1;
-        }
-        await deleteModel({ id: item.id, name: item.name }, reload);
-      }
-
-      /**
-       * 清空文档
-       * @param item
-       */
-      async function onDeleteAllDoc(item) {
-        pageNo.value = 1;
-        return doDeleteAllDoc(item.id, reload);
-      }
-
-      /**
-       * 查询
-       */
-      function searchQuery() {
-        pageNo.value = 1;
-        reload();
-      }
-
-      /**
-       * 重置
-       */
-      function searchReset() {
-        formRef.value.resetFields();
-        queryParam.createBy = '';
-        pageNo.value = 1;
-        //刷新数据
-        reload();
-      }
-
-      /**
        * 参数配置点击事件
        *
        * @param id
@@ -215,48 +109,23 @@ import { useRouter } from 'vue-router';
         openDocModal(true, { id });
       }
 
-      /**
-       * 知识库向量化
-       * @param id
-       */
-      async function handleVectorization(id) {
-        rebuild({ knowIds: id }).then((res) =>{
-          if(res.success){
-            createMessage.success("向量化成功！");
-            reload();
-          }else{
-            createMessage.warning("向量化失败！");
-          }
-        }).catch(err=>{
-          createMessage.warning("向量化失败！");
-        });
-      }
-
       return {
         router,
         handleProductionFirewall,
-        handleTestFirewall,
         handleAddKnowled,
         handleEditClick,
         registerModal,
         knowledgeList,
-        reload,
         pageNo,
         pageSize,
         pageSizeOptions,
         total,
-        handlePageChange,
-        handleDelete,
-        onDeleteAllDoc,
-        searchQuery,
-        searchReset,
         queryParam,
         labelCol,
         wrapperCol,
         formRef,
         handleDocClick,
         docListRegister,
-        handleVectorization,
       };
     },
   });

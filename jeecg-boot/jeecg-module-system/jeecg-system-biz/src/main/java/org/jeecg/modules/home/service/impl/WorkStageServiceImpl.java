@@ -61,8 +61,8 @@ public class WorkStageServiceImpl implements IWorkStageService {
     private static Map<String, Object> buildRequestParam(String key,String value) {
         Map<String, Object> requestParamMap = new HashMap<>();
         // 设置分页参数
-        requestParamMap.put("pageNum", 1);
-        requestParamMap.put("pageSize", 10);
+        // requestParamMap.put("pageNum", 1);
+        // requestParamMap.put("pageSize", 10);
         // 设置定义的参数
         Map<String, Object> customParamMap = new HashMap<>();
         // 你自定义的参数
@@ -190,8 +190,6 @@ public class WorkStageServiceImpl implements IWorkStageService {
         String url = String.format(dataBaseUrl, "getAllSystemInfo");
         // 构建请求Header信息
         Map<String, String> headerMap = buildWeakAuthHeader("data",dataApiKey);
-
-
 
         AiOpsDataResponse response = new AiOpsDataResponse();
 
