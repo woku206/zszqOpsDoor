@@ -59,11 +59,41 @@
     </div>
   </Card>
 
-  <!-- 系统公告面板 -->
-  <Card class="lg:w-1/2 w-full" title="我的ITIL工单">
+  <!-- 我的服务请求面板 -->
+  <Card class="lg:w-1/2 w-full" title="我的服务请求">
     <div class="space-y-3">
-      <div class="flex items-center justify-between">
-      </div>
+      <template v-if="ticketList.length > 0">
+        <div
+          v-for="ticket in ticketList"
+          :key="ticket.id"
+          class="flex items-start justify-between border-b pb-2 last:border-b-0 last:pb-0"
+          @click="handleTicketClick(ticket.id)"
+        >
+          <div class="flex-1">
+            <div class="font-medium text-gray-900 flex items-center">
+              <span class="mr-2">防火墙策略申请</span>
+              <Tag :color="getStatusColor(ticket.status)" class="text-xs">
+                {{ getTicketStatusText(ticket.status) }}
+              </Tag>
+              <Tag :color="getUrgencyColor(ticket.urgencyLevel)" class="text-xs" v-if="ticket.urgencyLevel">
+                {{ getUrgencyText(ticket.urgencyLevel) }}
+              </Tag>
+            </div>
+            <div class="text-sm text-gray-500 mt-1">
+              申请人: {{ ticket.applicant || '未知' }}
+            </div>
+            <div class="text-sm text-gray-500 mt-1" v-if="ticket.environmentType">
+              申请内容: {{ ticket.applyInfo }}
+            </div>
+          </div>
+          <div class="flex flex-col items-end ml-4">
+            <span class="text-xs text-gray-500 mb-2">{{ formatTime(ticket.createTime) }}</span>
+          </div>
+        </div>
+      </template>
+      <template v-else>
+        <div class="text-gray-400 text-center py-4">暂无服务请求</div>
+      </template>
     </div>
   </Card>
 
@@ -102,6 +132,8 @@ import { EyeOutlined } from '@ant-design/icons-vue';
 import { Icon } from '/@/components/Icon';
 import { useUserStore } from '/@/store/modules/user';
 import { defHttp } from '/@/utils/http/axios';
+import { useRouter } from 'vue-router';
+import dayjs from 'dayjs';
 
 export default defineComponent({
   components: { 
@@ -116,8 +148,10 @@ export default defineComponent({
   },
   setup() {
     const alarmList = ref<any[]>([]);
+    const ticketList = ref<any[]>([]);
     const userStore = useUserStore();
     const username = userStore.getUserInfo?.username;
+    const router = useRouter();
     
     // 弹框相关状态
     const closeModalVisible = ref(false);
@@ -158,7 +192,41 @@ export default defineComponent({
     function getStatusColor(status: string) {
       if (status == 'dispose') return 'red';
       if (status == 'processing') return 'orange';
+      if (status == 'pending') return 'blue';
+      if (status == 'resolved') return 'green';
+      if (status == 'closed') return 'gray';
       return 'default';
+    }
+
+    // 工单状态映射
+    function getTicketStatusText(status: string) {
+      if (status == 'pending') return '草稿';
+      if (status == 'processing') return '处理中';
+      if (status == 'resolved') return '已解决';
+      if (status == 'rejected') return '已拒绝';
+      if (status == 'closed') return '已关闭';
+      return '未知';
+    }
+
+    // 紧急程度映射
+    function getUrgencyText(urgency: string) {
+      if (urgency == 'high') return '高';
+      if (urgency == 'medium') return '中';
+      if (urgency == 'low') return '低';
+      return urgency;
+    }
+
+    function getUrgencyColor(urgency: string) {
+      if (urgency == 'high') return 'red';
+      if (urgency == 'medium') return 'orange';
+      if (urgency == 'low') return 'blue';
+      return 'default';
+    }
+
+    // 时间格式化
+    function formatTime(time: string | Date) {
+      if (!time) return '';
+      return dayjs(time).format('YYYY-MM-DD HH:mm:ss');
     }
 
     // 获取告警列表
@@ -260,11 +328,41 @@ export default defineComponent({
       currentAlarmId.value = null;
     }
 
+    // 获取工单列表
+    async function fetchTicketList() {
+      try {
+        const data = await defHttp.get({
+          url: `/sys/home/getTicketList`,
+          params: {
+            createUser: username,
+          },
+        });
+        if (data && Array.isArray(data)) {
+          ticketList.value = data;
+        } else {
+          ticketList.value = [];
+        }
+      } catch (e) {
+        console.error('获取工单列表失败:', e);
+        ticketList.value = [];
+      }
+    }
+
+    // 点击工单跳转
+    function handleTicketClick(ticketId: number) {
+      router.push({
+        path: '/dashboard/firewall',
+        query: { id: ticketId }
+      });
+    }
+
     onMounted(() => {
       fetchAlarmList();
+      fetchTicketList();
       // 设置5秒定时器
       intervalId = window.setInterval(() => {
         fetchAlarmList();
+        fetchTicketList();
       }, 5000);
     });
 
@@ -278,6 +376,7 @@ export default defineComponent({
 
     return {
       alarmList,
+      ticketList,
       loadingMap,
       closeModalVisible,
       closeLoading,
@@ -286,10 +385,15 @@ export default defineComponent({
       getStatusText,
       getLevelColor,
       getStatusColor,
+      getTicketStatusText,
+      getUrgencyText,
+      getUrgencyColor,
+      formatTime,
       handleDealAlarm,
       showCloseModal,
       handleCloseAlarm,
       handleCancelClose,
+      handleTicketClick,
     };
   },
 });

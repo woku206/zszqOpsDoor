@@ -1,10 +1,6 @@
 package org.jeecg.modules.home.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
-
-import org.jeecg.modules.home.vo.*;
-import org.apache.ibatis.annotations.Param;
+import com.alibaba.fastjson.JSONObject;
 import org.jeecg.common.api.vo.Result;
 
 
@@ -71,5 +67,34 @@ public interface IWorkStageService{
 	 * @return
 	 */
 	Result<?> getCmdbSystemIpList(String businessName);
+
+
+	/**
+	 * 查询IP网段列表
+	 * @param req
+	 * @return
+	 */
+	Result<?> getCmdbIpScoperList();
+
+	/**
+	 * 保存防火墙策略申请草稿
+	 * @param jsonObject
+	 * @return
+	 */
+	Result<?> saveTicket(JSONObject jsonObject);
+
+	/**
+	 * 查询工单列表
+	 * @param createUser 创建用户
+	 * @return
+	 */
+	Result<?> queryTicketList(String createUser);
+
+	/**
+	 * 根据ID查询工单详情
+	 * @param id 工单ID
+	 * @return
+	 */
+	Result<?> queryTicketById(Integer id);
 
 }

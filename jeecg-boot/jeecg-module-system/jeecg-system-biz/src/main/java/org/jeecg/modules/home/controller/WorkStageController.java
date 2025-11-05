@@ -95,4 +95,46 @@ public class WorkStageController {
     public Result<?> getCmdbSystemIpList(@RequestBody JSONObject jsonObject){
         return workStageService.getCmdbSystemIpList(jsonObject.getString("businessName"));
     }
+
+
+    /**
+     * 查询IP网段列表
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping(value = "/getCmdbIpScoperList",  method = RequestMethod.GET)
+    public Result<?> getCmdbIpScoperList(HttpServletRequest req){
+        return workStageService.getCmdbIpScoperList();
+    }
+
+    /**
+     * 保存防火墙策略申请草稿
+     * @param jsonObject
+     * @return
+     */
+    @RequestMapping(value = "/saveTicket", method = RequestMethod.POST)
+    public Result<?> saveTicket(@RequestBody JSONObject jsonObject){
+        return workStageService.saveTicket(jsonObject);
+    }
+
+    /**
+     * 查询工单列表
+     * @param createUser 创建用户
+     * @return
+     */
+    @RequestMapping(value = "/getTicketList", method = RequestMethod.GET)
+    public Result<?> getTicketList(@RequestParam(name="createUser", required = true) String createUser){
+        return workStageService.queryTicketList(createUser);
+    }
+
+    /**
+     * 根据ID查询工单详情
+     * @param id 工单ID
+     * @return
+     */
+    @RequestMapping(value = "/getTicketById", method = RequestMethod.GET)
+    public Result<?> getTicketById(@RequestParam(name="id", required = true) Integer id){
+        return workStageService.queryTicketById(id);
+    }
 }

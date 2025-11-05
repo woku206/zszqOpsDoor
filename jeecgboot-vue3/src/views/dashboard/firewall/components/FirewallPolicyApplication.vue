@@ -51,16 +51,17 @@
           <div class="header-cell">操作</div>
         </div>
         <div class="table-body">
-          <div v-for="(policy, index) in formData.policies" :key="index" class="table-row">
+          <div v-for="(policy, index) in formData.policies" :key="index" class="table-row" :class="{ 'row-conflict': conflictingRows.has(index) }">
             <div class="table-cell">{{ index + 1 }}</div>
-            <div class="table-cell">
-              <a-select v-model:value="policy.sourceType" placeholder="请选择" style="width: 100%" @change="() => { policy.sourceSystem = ''; policy.sourceAddress = ''; }">
+            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
+              <a-select v-model:value="policy.sourceType" placeholder="请选择" style="width: 100%" @change="() => { policy.sourceSystem = ''; policy.sourceAddress = ''; if(policy.sourceType === 'ipScoperAddress') { policy.sourceSystem = 'internal'; } }">
                 <a-select-option value="internalApplicationAddress">内部应用地址</a-select-option>
                 <a-select-option value="dbAddress">内部数据库地址</a-select-option>
+                <a-select-option value="ipScoperAddress">内部网段地址</a-select-option>
                 <a-select-option value="externalAddress">外部地址</a-select-option>
               </a-select>
             </div>
-            <div class="table-cell">
+            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
               <a-select 
                 v-model:value="policy.sourceSystem" 
                 placeholder="请选择" 
@@ -68,7 +69,7 @@
                 :options="getSystemOptions(policy.sourceType)"
                 show-search
                 :filter-option="(input, option) => option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0"
-                :disabled="policy.sourceType === 'externalAddress'"
+                :disabled="policy.sourceType === 'externalAddress' || policy.sourceType === 'ipScoperAddress'"
                 @change="() => { 
                   policy.sourceAddress = ''; 
                   if(policy.sourceType === 'internalApplicationAddress') {
@@ -79,31 +80,33 @@
                 }"
               />
               </div>
-            <div class="table-cell">
+            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
               <a-select 
-                v-if="policy.sourceType === 'internalApplicationAddress'"
+                v-if="policy.sourceType === 'internalApplicationAddress' || policy.sourceType === 'ipScoperAddress'"
                 v-model:value="policy.sourceAddress" 
                 placeholder="请选择IP地址" 
                 style="width: 100%"
                 :options="getAddressOptions(policy.sourceType, policy.sourceSystem, 'source')"
                 show-search
-                mode="multiple"
+                :mode="policy.sourceType === 'internalApplicationAddress' ? 'multiple' : undefined"
                 :filter-option="(input, option) => option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0"
               />
               <a-input 
                 v-else
                 v-model:value="policy.sourceAddress" 
                 placeholder="IP以逗号分隔，如: 192.168.1.1,10.0.0.1" 
+                @blur="() => { if (policy.sourceType === 'externalAddress' && policy.sourceAddress) { validateExternalIp(policy.sourceAddress, '源地址'); } }"
               />
             </div>
-            <div class="table-cell">
-              <a-select v-model:value="policy.destType" placeholder="请选择" style="width: 100%" @change="() => { policy.destSystem = ''; policy.destAddress = ''; }">
+            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
+              <a-select v-model:value="policy.destType" placeholder="请选择" style="width: 100%" @change="() => { policy.destSystem = ''; policy.destAddress = ''; if(policy.destType === 'ipScoperAddress') { policy.destSystem = 'internal'; } }">
                 <a-select-option value="internalApplicationAddress">内部应用地址</a-select-option>
                 <a-select-option value="dbAddress">内部数据库地址</a-select-option>
-                <!-- <a-select-option value="externalAddress">外部地址</a-select-option> -->
+                <a-select-option value="ipScoperAddress">内部网段地址</a-select-option>
+                <a-select-option value="externalAddress">外部地址</a-select-option>
               </a-select>
             </div>
-            <div class="table-cell">
+            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
               <a-select 
                 v-model:value="policy.destSystem" 
                 placeholder="请选择" 
@@ -111,7 +114,7 @@
                 :options="getSystemOptions(policy.destType)"
                 show-search
                 :filter-option="(input, option) => option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0"
-                :disabled="policy.destType === 'externalAddress'"
+                :disabled="policy.destType === 'externalAddress' || policy.destType === 'ipScoperAddress'"
                 @change="() => { 
                   policy.destAddress = ''; 
                   if(policy.destType === 'internalApplicationAddress') {
@@ -122,21 +125,22 @@
                 }"
               />
             </div>
-            <div class="table-cell">
+            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
               <a-select 
-                v-if="policy.destType === 'internalApplicationAddress'"
+                v-if="policy.destType === 'internalApplicationAddress' || policy.destType === 'ipScoperAddress'"
                 v-model:value="policy.destAddress" 
                 placeholder="请选择IP地址" 
                 style="width: 100%"
                 :options="getAddressOptions(policy.destType, policy.destSystem, 'dest')"
                 show-search
-                mode="multiple"
+                :mode="policy.destType === 'internalApplicationAddress' ? 'multiple' : undefined"
                 :filter-option="(input, option) => option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0"
               />
               <a-input 
                 v-else
                 v-model:value="policy.destAddress" 
                 placeholder="IP以逗号分隔，如: 192.168.1.1,10.0.0.1" 
+                @blur="() => { if (policy.destType === 'externalAddress' && policy.destAddress) { validateExternalIp(policy.destAddress, '目的地址'); } }"
               />
             </div>
             <!-- <div class="table-cell">
@@ -146,7 +150,7 @@
                 <a-select-option value="web">Web服务</a-select-option>
               </a-select>
             </div> -->
-            <div class="table-cell">
+            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
               <a-input 
                 v-model:value="policy.port" 
                 placeholder="如: 80,443" 
@@ -243,7 +247,7 @@ import Icon from '@/components/Icon';
 import dayjs from 'dayjs';
 import { useUserStore } from '/@/store/modules/user';
 import { defHttp } from '/@/utils/http/axios';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -254,15 +258,21 @@ export default defineComponent({
   },
   setup() {
     const userStore = useUserStore();
+    const username = userStore.getUserInfo?.username;
     const currentUser = userStore.getUserInfo?.realname || userStore.getUserInfo?.username || '当前用户';
     const route = useRoute();
+    const router = useRouter();
     const environmentType = route.query.type === 'production' ? '生产' : '测试'; // 从路由参数获取环境类型
 
     // CMDB系统数据
     const cmdbSystems = ref<any[]>([]);
     const sourceSystemIps = ref<any[]>([]);
     const destSystemIps = ref<any[]>([]);
+    const ipScopeList = ref<any[]>([]);
     const loading = ref(false);
+    
+    // 冲突行标记
+    const conflictingRows = ref<Set<number>>(new Set());
 
     const formData = reactive({
       applicant: currentUser,
@@ -324,6 +334,21 @@ export default defineComponent({
       }
     };
 
+    // 获取CMDB IP网段列表
+    const fetchCmdbIpScoperList = async () => {
+      try {
+        const response = await defHttp.get({
+          url: '/sys/home/getCmdbIpScoperList',
+        });
+        if (response) {
+          ipScopeList.value = response;
+        }
+      } catch (error) {
+        console.error('获取IP网段列表失败:', error);
+        message.error('获取IP网段列表失败');
+      }
+    };
+
     // 获取数据库关联应用系统（Mock数据）
     const getDatabaseSystems = () => {
       return [
@@ -345,6 +370,8 @@ export default defineComponent({
         return getDatabaseSystems();
       } else if (type === 'externalAddress') {
         return [{ label: '外部应用系统', value: 'external' }];
+      } else if (type === 'ipScoperAddress') {
+        return [{ label: '内部网段', value: 'internal' }];
       }
       return [];
     };
@@ -357,6 +384,11 @@ export default defineComponent({
           label: ip,
           value: ip
         }));
+      } else if (type === 'ipScoperAddress') {
+        return ipScopeList.value.map(scope => ({
+          label: scope,
+          value: scope
+        }));
       }
       return [];
     };
@@ -364,8 +396,18 @@ export default defineComponent({
     // IP格式校验
     const validateIpFormat = (ip: string) => {
       const ipRegex = /^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/;
-      const ips = ip.split(',').map(i => i.trim());
-      return ips.every(i => ipRegex.test(i));
+      const ips = ip.split(',').map(i => i.trim()).filter(i => i.length > 0);
+      if (ips.length === 0) return false;
+      
+      // 验证每个IP地址格式和范围
+      return ips.every(i => {
+        if (!ipRegex.test(i)) return false;
+        const parts = i.split('.');
+        return parts.every(part => {
+          const num = parseInt(part);
+          return num >= 0 && num <= 255;
+        });
+      });
     };
 
     // CMDB网段校验（Mock）
@@ -390,6 +432,27 @@ export default defineComponent({
       });
     };
 
+    // 校验外部IP地址格式
+    const validateExternalIp = (ip: string, addressType: string) => {
+      if (!ip || !ip.trim()) {
+        return;
+      }
+      
+      if (!validateIpFormat(ip)) {
+        message.warning(`${addressType}IP格式不正确，请输入正确的IP地址（多个IP用逗号分隔）`);
+        return;
+      }
+      
+      // 检查是否在CMDB网段内
+      const ips = ip.split(',').map(i => i.trim()).filter(i => i.length > 0);
+      for (const singleIp of ips) {
+        if (isInCmdbRange(singleIp)) {
+          message.warning(`${addressType} ${singleIp} 不能在CMDB网段内`);
+          return;
+        }
+      }
+    };
+
     // 辅助函数：将内部值映射为显示文本
     const mapToDisplayText = (value: any, type: string) => {
       if (type === 'addressType') {
@@ -397,6 +460,7 @@ export default defineComponent({
           case 'internalApplicationAddress': return '内部应用地址';
           case 'dbAddress': return '内部数据库地址';
           case 'externalAddress': return '外部地址';
+          case 'ipScoperAddress': return '内部网段地址';
           default: return value;
         }
       } else if (type === 'longConnection') {
@@ -407,6 +471,39 @@ export default defineComponent({
       return value;
     };
 
+    // 检测并标记三字段联合冲突的行
+    const detectConflicts = () => {
+      conflictingRows.value.clear();
+      const comboMap = new Map<string, number[]>();
+
+      formData.policies.forEach((policy, index) => {
+        const comboKey = [
+          policy.sourceSystem || '',
+          policy.destSystem || '',
+          policy.port || ''
+        ].join('||');
+        if (!comboMap.has(comboKey)) {
+          comboMap.set(comboKey, []);
+        }
+        comboMap.get(comboKey)!.push(index);
+      });
+
+      const indices = new Set<number>();
+      comboMap.forEach(rows => {
+        if (rows.length > 1) {
+          rows.forEach(row => indices.add(row));
+        }
+      });
+
+      conflictingRows.value = indices;
+    };
+
+    // 监听策略变化，检测冲突
+    watch(() => formData.policies, () => {
+      detectConflicts();
+      formData.approvalRemarks = generateApplicationDescription();
+    }, { deep: true });
+
     // 将IP地址分组为连续段的函数
     const groupConsecutiveIPs = (ips: string[]) => {
       if (!ips || ips.length === 0) return [];
@@ -414,29 +511,41 @@ export default defineComponent({
       // 将IP地址转换为数字进行比较
       const ipToNumber = (ip: string) => {
         const parts = ip.split('.');
+        if (parts.length !== 4) return 0;
         return parseInt(parts[0]) * 256 * 256 * 256 + 
                parseInt(parts[1]) * 256 * 256 + 
                parseInt(parts[2]) * 256 + 
                parseInt(parts[3]);
       };
       
+      // 获取IP的前三个部分（用于判断是否在同一网段）
+      const getIpPrefix = (ip: string) => {
+        const parts = ip.split('.');
+        if (parts.length !== 4) return '';
+        return `${parts[0]}.${parts[1]}.${parts[2]}`;
+      };
+      
       // 排序IP地址
       const sortedIPs = ips.map(ip => ({
         ip: ip.trim(),
-        num: ipToNumber(ip.trim())
+        num: ipToNumber(ip.trim()),
+        prefix: getIpPrefix(ip.trim())
       })).sort((a, b) => a.num - b.num);
       
       const groups: string[][] = [];
       let currentGroup: string[] = [sortedIPs[0].ip];
+      let currentPrefix = sortedIPs[0].prefix;
       
       for (let i = 1; i < sortedIPs.length; i++) {
-        if (sortedIPs[i].num === sortedIPs[i-1].num + 1) {
+        // 连续IP的条件：数值连续且前三个部分相同
+        if (sortedIPs[i].num === sortedIPs[i-1].num + 1 && sortedIPs[i].prefix === currentPrefix) {
           // 连续的IP，添加到当前组
           currentGroup.push(sortedIPs[i].ip);
         } else {
-          // 不连续，开始新组
+          // 不连续或前缀不同，开始新组
           groups.push([...currentGroup]);
           currentGroup = [sortedIPs[i].ip];
+          currentPrefix = sortedIPs[i].prefix;
         }
       }
       
@@ -451,10 +560,12 @@ export default defineComponent({
       if (ipGroup.length === 1) {
         return ipGroup[0];
       } else {
-        // 提取最后一个数字部分
-        const startLastNum = ipGroup[0].split('.').pop();
-        const endLastNum = ipGroup[ipGroup.length - 1].split('.').pop();
-        const baseIP = ipGroup[0].substring(0, ipGroup[0].lastIndexOf('.'));
+        // 提取前三个部分作为基础IP
+        const startParts = ipGroup[0].split('.');
+        const endParts = ipGroup[ipGroup.length - 1].split('.');
+        const baseIP = startParts.slice(0, 3).join('.'); // 前三个部分
+        const startLastNum = startParts[3]; // 最后一个数字
+        const endLastNum = endParts[3]; // 最后一个数字
         return `${baseIP}.${startLastNum}-${endLastNum}`;
       }
     };
@@ -475,17 +586,35 @@ export default defineComponent({
         let sourceAddressGroups: string[][] = [];
         let destAddressGroups: string[][] = [];
         
+        // 处理源地址
         if (Array.isArray(policy.sourceAddress)) {
           // 多选情况，分组连续IP
           sourceAddressGroups = groupConsecutiveIPs(policy.sourceAddress);
+        } else if (policy.sourceType === 'externalAddress' && policy.sourceAddress) {
+          // 外部地址类型，可能是逗号分隔的字符串，需要解析和分组
+          const ips = policy.sourceAddress.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0);
+          if (ips.length > 0) {
+            sourceAddressGroups = groupConsecutiveIPs(ips);
+          } else {
+            sourceAddressGroups = [[policy.sourceAddress]];
+          }
         } else {
           // 单选情况，作为单个组
           sourceAddressGroups = [[policy.sourceAddress || '']];
         }
         
+        // 处理目的地址
         if (Array.isArray(policy.destAddress)) {
           // 多选情况，分组连续IP
           destAddressGroups = groupConsecutiveIPs(policy.destAddress);
+        } else if (policy.destType === 'externalAddress' && policy.destAddress) {
+          // 外部地址类型，可能是逗号分隔的字符串，需要解析和分组
+          const ips = policy.destAddress.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0);
+          if (ips.length > 0) {
+            destAddressGroups = groupConsecutiveIPs(ips);
+          } else {
+            destAddressGroups = [[policy.destAddress]];
+          }
         } else {
           // 单选情况，作为单个组
           destAddressGroups = [[policy.destAddress || '']];
@@ -591,12 +720,6 @@ export default defineComponent({
     };
 
     // 监听策略变化，自动更新申请说明
-    watch(() => formData.policies, () => {
-      formData.approvalRemarks = generateApplicationDescription();
-    }, { deep: true });
-
-
-    // 监听策略变化，自动更新申请说明
     watch(() => formData.effectiveType, () => {
       formData.approvalRemarks = generateApplicationDescription();
     }, { deep: true });
@@ -632,6 +755,15 @@ export default defineComponent({
     };
 
     const submitApplication = () => {
+      // 先检测冲突
+      detectConflicts();
+      
+      // 如果有冲突，不允许提交
+      if (conflictingRows.value.size > 0) {
+        message.error('源/目的地址应用系统、端口三者需保证唯一，不允许分隔多行');
+        return;
+      }
+
       // 校验必填字段
       const errors: string[] = [];
 
@@ -696,24 +828,34 @@ export default defineComponent({
 
         // 校验外部地址IP格式和网段
         if (policy.sourceType === 'externalAddress' && policy.sourceAddress) {
+          // 校验IP格式（支持逗号分隔的多个IP）
           if (!validateIpFormat(policy.sourceAddress)) {
-            message.warning('源地址IP格式不正确');
+            message.warning('源地址IP格式不正确，请输入正确的IP地址（多个IP用逗号分隔）');
             return;
           }
-          if (isInCmdbRange(policy.sourceAddress)) {
-            message.warning('源地址不能在CMDB网段内');
-            return;
+          // 检查是否在CMDB网段内（每个IP都要检查）
+          const sourceIps = policy.sourceAddress.split(',').map(ip => ip.trim());
+          for (const ip of sourceIps) {
+            if (isInCmdbRange(ip)) {
+              message.warning(`源地址 ${ip} 不能在CMDB网段内`);
+              return;
+            }
           }
         }
 
         if (policy.destType === 'externalAddress' && policy.destAddress) {
+          // 校验IP格式（支持逗号分隔的多个IP）
           if (!validateIpFormat(policy.destAddress)) {
-            message.warning('目的地址IP格式不正确');
+            message.warning('目的地址IP格式不正确，请输入正确的IP地址（多个IP用逗号分隔）');
             return;
           }
-          if (isInCmdbRange(policy.destAddress)) {
-            message.warning('目的地址不能在CMDB网段内');
-            return;
+          // 检查是否在CMDB网段内（每个IP都要检查）
+          const destIps = policy.destAddress.split(',').map(ip => ip.trim());
+          for (const ip of destIps) {
+            if (isInCmdbRange(ip)) {
+              message.warning(`目的地址 ${ip} 不能在CMDB网段内`);
+              return;
+            }
           }
         }
       }
@@ -725,9 +867,47 @@ export default defineComponent({
       console.log('提交申请:', formData);
     };
 
-    const saveDraft = () => {
-      message.success('草稿保存成功');
-      console.log('保存草稿:', formData);
+    const saveDraft = async () => {
+      try {
+        // 构建基本信息(base_info)
+        const baseInfo = {
+          applicant: formData.applicant,
+          applicationDate: formData.applicationDate ? dayjs(formData.applicationDate).format('YYYY-MM-DD HH:mm:ss') : null,
+          urgencyLevel: formData.urgencyLevel,
+          environmentType: environmentType,
+        };
+
+        // 构建工单信息(ticket_info) - 包含策略配置和生效时间
+        const ticketInfo = {
+          policies: formData.policies,
+          effectiveType: formData.effectiveType,
+          effectiveDate: formData.effectiveDate ? dayjs(formData.effectiveDate).format('YYYY-MM-DD HH:mm:ss') : null,
+        };
+
+        // 构建请求数据
+        const requestData = {
+          ticket_type: 'firewall',
+          create_user: username,
+          status: 'pending',
+          base_info: baseInfo,
+          ticket_info: ticketInfo,
+          apply_info: formData.approvalRemarks,
+        };
+
+        await defHttp.post({
+          url: '/sys/home/saveTicket',
+          data: requestData
+        });
+        
+        message.success('草稿保存成功');
+        console.log('保存草稿:', requestData);
+        
+        // 跳转到工作台页面
+        await router.push('/dashboard/workbench');
+      } catch (error) {
+        console.error('保存草稿失败:', error);
+        message.error('保存草稿失败');
+      }
     };
 
     const resetForm = () => {
@@ -753,8 +933,80 @@ export default defineComponent({
       message.info('表单已重置');
     };
 
+    // 根据ID查询工单数据并渲染
+    const loadTicketData = async (ticketId: number) => {
+      try {
+        loading.value = true;
+        const data = await defHttp.get({
+          url: '/sys/home/getTicketById',
+          params: { id: ticketId }
+        });
+        
+        if (data) {
+          // 解析base_info
+          if (data.baseInfo) {
+            const baseInfo = typeof data.baseInfo === 'string' ? JSON.parse(data.baseInfo) : data.baseInfo;
+            formData.applicant = baseInfo.applicant || currentUser;
+            formData.applicationDate = baseInfo.applicationDate ? dayjs(baseInfo.applicationDate) : dayjs();
+            formData.urgencyLevel = baseInfo.urgencyLevel || 'medium';
+            if (baseInfo.environmentType) {
+              // 更新环境类型（如果需要）
+            }
+          }
+          
+          // 解析ticket_info
+          if (data.ticketInfo) {
+            const ticketInfo = typeof data.ticketInfo === 'string' ? JSON.parse(data.ticketInfo) : data.ticketInfo;
+            if (ticketInfo.policies && Array.isArray(ticketInfo.policies)) {
+              formData.policies = ticketInfo.policies;
+              
+              // 重新获取策略中应用系统的IP列表
+              for (const policy of formData.policies) {
+                if (policy.sourceType === 'internalApplicationAddress' && policy.sourceSystem) {
+                  await fetchCmdbSystemIps(policy.sourceSystem, 'source');
+                }
+                if (policy.destType === 'internalApplicationAddress' && policy.destSystem) {
+                  await fetchCmdbSystemIps(policy.destSystem, 'dest');
+                }
+              }
+            }
+            formData.effectiveType = ticketInfo.effectiveType || 'immediate';
+            formData.effectiveDate = ticketInfo.effectiveDate ? dayjs(ticketInfo.effectiveDate) : null as any;
+          }
+          
+          // 设置申请说明
+          formData.approvalRemarks = data.applyInfo || '';
+          
+          // 触发冲突检测
+          detectConflicts();
+        }
+      } catch (error) {
+        console.error('加载工单数据失败:', error);
+        message.error('加载工单数据失败');
+      } finally {
+        loading.value = false;
+      }
+    };
+
     // 初始化时获取CMDB系统数据
     fetchCmdbSystems();
+    fetchCmdbIpScoperList();
+    
+    // 检查是否有id参数，如果有则加载数据
+    const ticketId = route.query.id;
+    if (ticketId) {
+      let id: number;
+      if (typeof ticketId === 'string') {
+        id = parseInt(ticketId);
+      } else if (Array.isArray(ticketId)) {
+        id = parseInt(ticketId[0] || '0');
+      } else {
+        id = Number(ticketId);
+      }
+      if (!isNaN(id) && id > 0) {
+        loadTicketData(id);
+      }
+    }
 
     return {
       formData,
@@ -767,7 +1019,9 @@ export default defineComponent({
       getAddressOptions,
       fetchCmdbSystemIps,
       validatePort,
+      validateExternalIp,
       loading,
+      conflictingRows,
     };
   },
 });
@@ -979,6 +1233,19 @@ export default defineComponent({
     &:hover {
       background: #f5f5f5 !important;
       border-color: #40a9ff !important;
+    }
+  }
+
+  // 冲突行样式
+  .row-conflict {
+    background-color: #ffe6e6 !important;
+  }
+
+  .table-row.row-conflict {
+    background-color: #ffe6e6 !important;
+    
+    .table-cell {
+      background-color: #ffe6e6 !important;
     }
   }
 }
