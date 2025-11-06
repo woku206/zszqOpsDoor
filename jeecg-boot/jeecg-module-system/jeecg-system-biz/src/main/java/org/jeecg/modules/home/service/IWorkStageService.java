@@ -66,7 +66,7 @@ public interface IWorkStageService{
 	 * @param businessName
 	 * @return
 	 */
-	Result<?> getCmdbSystemIpList(String businessName);
+	Result<?> getCmdbSystemIpList(String objectId);
 
 
 	/**

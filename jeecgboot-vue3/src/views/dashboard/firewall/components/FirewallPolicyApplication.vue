@@ -315,11 +315,11 @@ export default defineComponent({
     };
 
     // 获取CMDB系统IP列表
-    const fetchCmdbSystemIps = async (businessName: string, type: 'source' | 'dest') => {
+    const fetchCmdbSystemIps = async (objectId: string, type: 'source' | 'dest') => {
       try {
         const response = await defHttp.post({
           url: '/sys/home/getCmdbSystemIpList',
-          data: { businessName }
+          data: { objectId }
         });
         if (response) {
           if (type === 'source') {
@@ -359,12 +359,28 @@ export default defineComponent({
       ];
     };
 
+    // 根据系统值获取展示名称（用于将objectId映射为中文名称）
+    const getSystemDisplayName = (type: string, systemValue: string) => {
+      if (!systemValue) return '';
+      if (type === 'externalAddress') return '外部应用系统';
+      if (type === 'ipScoperAddress') return '内部网段';
+      if (type === 'dbAddress') {
+        const db = getDatabaseSystems().find((d) => d.value === systemValue);
+        return db ? db.label : systemValue;
+      }
+      if (type === 'internalApplicationAddress') {
+        const hit = cmdbSystems.value.find((s: any) => s.objectId === systemValue);
+        return hit ? hit.businessName : systemValue;
+      }
+      return systemValue;
+    };
+
     // 获取系统选项
     const getSystemOptions = (type: string) => {
       if (type === 'internalApplicationAddress') {
         return cmdbSystems.value.map(system => ({
-          label: system,
-          value: system
+          label: system.businessName,
+          value: system.objectId,
         }));
       } else if (type === 'dbAddress') {
         return getDatabaseSystems();
@@ -646,12 +662,12 @@ export default defineComponent({
             data.push([
               rowIndex++,
               sourceAddressDisplay,
-              policy.sourceType === 'externalAddress' ? '外部应用系统' : policy.sourceSystem,
+              getSystemDisplayName(policy.sourceType, policy.sourceSystem),
               mapToDisplayText(policy.sourceType, 'addressType'),
               destAddressDisplay,
               portDisplay, // 端口字段，最多10个端口用逗号分隔
               '', // 至目的端口2字段留空
-              policy.destType === 'externalAddress' ? '外部应用系统' : policy.destSystem,
+              getSystemDisplayName(policy.destType, policy.destSystem),
               mapToDisplayText(policy.destType, 'addressType'),
               mapToDisplayText(policy.protocol, 'protocol'),
               mapToDisplayText(policy.longConnection, 'longConnection'),
@@ -674,17 +690,8 @@ export default defineComponent({
 
       if (formData.policies.length > 0) {
         const firstPolicy = formData.policies[0]; // 取第一条策略作为文件名参考
-        if (firstPolicy.sourceType === 'externalAddress') {
-          sourceSystemName = '外部应用系统';
-        } else if (firstPolicy.sourceSystem) {
-          sourceSystemName = firstPolicy.sourceSystem;
-        }
-
-        if (firstPolicy.destType === 'externalAddress') {
-          destSystemName = '外部应用系统';
-        } else if (firstPolicy.destSystem) {
-          destSystemName = firstPolicy.destSystem;
-        }
+        sourceSystemName = getSystemDisplayName(firstPolicy.sourceType, firstPolicy.sourceSystem);
+        destSystemName = getSystemDisplayName(firstPolicy.destType, firstPolicy.destSystem);
       }
 
       const filename = `${sourceSystemName}到${destSystemName}的防火墙安全策略申请表（${environmentType}环境）.xls`;
@@ -695,7 +702,7 @@ export default defineComponent({
     };
 
     // 自动生成申请说明
-    const generateApplicationDescription = () => {
+      const generateApplicationDescription = () => {
       const policy = formData.policies[0];
       if (!policy.sourceType || !policy.sourceSystem || !policy.destType || !policy.destSystem) {
         return '';
@@ -716,7 +723,10 @@ export default defineComponent({
       const sourceTypeText = sourceTypeMap[policy.sourceType] || '未知类型';
       const destTypeText = destTypeMap[policy.destType] || '未知类型';
 
-      return `关于开通${sourceTypeText}-${policy.sourceSystem}到${destTypeText}-${policy.destSystem}的防火墙策略，生效时间为${formData.effectiveType === 'immediate' ? '立即生效' : formData.effectiveDate}`;
+      const sourceName = getSystemDisplayName(policy.sourceType, policy.sourceSystem);
+      const destName = getSystemDisplayName(policy.destType, policy.destSystem);
+
+      return `关于开通${sourceTypeText}-${sourceName}到${destTypeText}-${destName}的防火墙策略，生效时间为${formData.effectiveType === 'immediate' ? '立即生效' : formData.effectiveDate}`;
     };
 
     // 监听策略变化，自动更新申请说明
@@ -893,6 +903,19 @@ export default defineComponent({
           ticket_info: ticketInfo,
           apply_info: formData.approvalRemarks,
         };
+
+        // 如果是从带有id的URL进入，则进行更新，携带id
+        const queryId = route.query.id;
+        if (queryId) {
+          let id: number | null = null;
+          if (typeof queryId === 'string') id = parseInt(queryId);
+          else if (Array.isArray(queryId)) id = parseInt(queryId[0] || '0');
+          else id = Number(queryId);
+          if (!isNaN(id) && id > 0) {
+            // @ts-ignore
+            requestData.id = id;
+          }
+        }
 
         await defHttp.post({
           url: '/sys/home/saveTicket',

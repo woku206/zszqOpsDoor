@@ -93,7 +93,7 @@ public class WorkStageController {
      */
     @RequestMapping(value = "/getCmdbSystemIpList",  method = RequestMethod.POST)
     public Result<?> getCmdbSystemIpList(@RequestBody JSONObject jsonObject){
-        return workStageService.getCmdbSystemIpList(jsonObject.getString("businessName"));
+        return workStageService.getCmdbSystemIpList(jsonObject.getString("objectId"));
     }
 
 

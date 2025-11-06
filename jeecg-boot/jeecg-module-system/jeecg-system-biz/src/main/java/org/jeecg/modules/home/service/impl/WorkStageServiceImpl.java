@@ -239,9 +239,12 @@ public class WorkStageServiceImpl implements IWorkStageService {
             
             if ("0000".equals(response.getCode())) {
                 System.out.println("请求成功");
-                List<String> systemNameList = new ArrayList<>();
+                List<Map<String, Object>> systemNameList = new ArrayList<>();
                 for (Map<String, Object> row : response.getData().getRows()) {
-                    systemNameList.add(row.get("businessName").toString());
+                    Map<String, Object> systemNameMap = new HashMap<>();
+                    systemNameMap.put("businessName", row.get("businessName").toString());
+                    systemNameMap.put("objectId", row.get("objectId").toString());
+                    systemNameList.add(systemNameMap);  
                 }
                 if (systemNameList.isEmpty()) {
                     return Result.error("qryCmdbSystem failed!!!",response);
@@ -255,7 +258,7 @@ public class WorkStageServiceImpl implements IWorkStageService {
     }
 
     @Override
-	public Result<?> getCmdbSystemIpList(String businessName){
+	public Result<?> getCmdbSystemIpList(String objectId){
         String url = String.format(dataBaseUrl, "getSystemIpList");
         // 构建请求Header信息
         Map<String, String> headerMap = buildWeakAuthHeader("data",dataApiKey);
@@ -265,8 +268,8 @@ public class WorkStageServiceImpl implements IWorkStageService {
 
         try {
             // 构建请求参数
-            String key = "systemName";
-            String  value = businessName;
+            String key = "objectId";
+            String  value = objectId;
             Map<String, Object> requestParamMap = buildRequestParam(key,value);
             // 发送请求，根据API的定义构建Get或者Post请求
             HttpRequest httpRequest = HttpRequest.post(url);
@@ -360,6 +363,11 @@ public class WorkStageServiceImpl implements IWorkStageService {
     public Result<?> saveTicket(JSONObject jsonObject) {
         try {
             FirewallTicket ticket = new FirewallTicket();
+            // 如果包含id，则走更新逻辑
+            Integer id = jsonObject.getInteger("id");
+            if (id != null) {
+                ticket.setId(id);
+            }
             
             // 设置工单类型（从前端接收，如果没有则默认为firewall）
             ticket.setTicketType(jsonObject.getString("ticket_type") != null ? jsonObject.getString("ticket_type") : "firewall");
@@ -385,13 +393,20 @@ public class WorkStageServiceImpl implements IWorkStageService {
             // 设置申请信息(apply_info)
             ticket.setApplyInfo(jsonObject.getString("apply_info"));
             
-            // 设置创建时间
-            ticket.setCreateTime(new Date());
-            
-            // 保存到数据库
-            firewallTicketMapper.insert(ticket);
-            
             Map<String, Object> result = new HashMap<>();
+            // 插入或更新
+            if (ticket.getId() != null) {
+                // 更新
+                ticket.setUpdateTime(new Date());
+                firewallTicketMapper.updateById(ticket);
+                result.put("id", ticket.getId());
+                return Result.OK("更新成功", result);
+            } else {
+                // 新增
+                ticket.setCreateTime(new Date());
+                firewallTicketMapper.insert(ticket);
+            }
+            
             result.put("id", ticket.getId());
             return Result.OK("保存成功", result);
         } catch (Exception e) {
