@@ -242,10 +242,9 @@ export default defineComponent({
         });
         if (
           data &&
-          data.code == '0000' &&
-          Array.isArray(data.data.rows)
+          Array.isArray(data)
         ) {
-          alarmList.value = data.data.rows;
+          alarmList.value = data;
         } else {
           alarmList.value = [];
         }
@@ -363,7 +362,7 @@ export default defineComponent({
       intervalId = window.setInterval(() => {
         fetchAlarmList();
         fetchTicketList();
-      }, 5000);
+      }, 30000);
     });
 
     onUnmounted(() => {

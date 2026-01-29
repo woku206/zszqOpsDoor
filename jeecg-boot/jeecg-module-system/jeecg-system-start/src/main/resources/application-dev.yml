@@ -337,3 +337,5 @@ aiops:
   dataBaseUrl: http://10.58.229.214:9900/api/open/data-service/%s
   dataApiKey: 985804c84d1e7f8ee802b92598f2af903c596b5a18abef5685fb31ad406993b7
   alertApiKey: d344929f5d9fda86013fbdc1cb400f1f95815cc9b1ae6d9007463de38527d375
+itil:
+  baseUrl: http://10.58.229.95:8080

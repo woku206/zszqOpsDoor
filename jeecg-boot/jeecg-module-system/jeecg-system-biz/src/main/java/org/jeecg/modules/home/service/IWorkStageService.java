@@ -97,4 +97,32 @@ public interface IWorkStageService{
 	 */
 	Result<?> queryTicketById(Integer id);
 
+	/**
+	 * 生成工单附件
+	 * @param jsonObject 工单数据
+	 * @return
+	 */
+	Result<?> genTicket(JSONObject jsonObject);
+
+	/**
+	 * 下载工单附件
+	 * @param id 工单ID
+	 * @return
+	 */
+	Result<?> downloadTicketAttachment(Integer id);
+
+	/**
+	 * 提交工单（生成附件、上传ITIL、发起流程）
+	 * @param jsonObject 工单数据
+	 * @return
+	 */
+	Result<?> submitTicket(JSONObject jsonObject);
+
+	/**
+	 * 删除工单
+	 * @param id 工单ID
+	 * @return
+	 */
+	Result<?> deleteTicket(Integer id);
+
 }

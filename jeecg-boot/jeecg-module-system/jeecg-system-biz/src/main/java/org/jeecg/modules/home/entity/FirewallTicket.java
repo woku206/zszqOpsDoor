@@ -78,5 +78,35 @@ public class FirewallTicket implements Serializable {
      */
     @Schema(description = "申请信息")
     private String applyInfo;
+
+    /**
+     * 附件路径
+     */
+    @Schema(description = "附件路径")
+    private String attachmentPath;
+
+    /**
+     * ITIL附件UUID
+     */
+    @Schema(description = "ITIL附件UUID")
+    private String itilAttachmentUuid;
+
+     /**
+     * ITIL流程ID
+     */
+    @Schema(description = "ITIL流程ID")
+    private String itilId;
+
+    /**
+     * ITIL流程实例ID
+     */
+    @Schema(description = "ITIL流程实例ID")
+    private String processInstanceId;
+
+    /**
+     * ITIL流程Key
+     */
+    @Schema(description = "ITIL流程Key")
+    private String processKey;
 }
 

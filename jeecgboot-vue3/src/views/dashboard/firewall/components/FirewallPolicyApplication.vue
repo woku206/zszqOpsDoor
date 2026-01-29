@@ -13,15 +13,15 @@
       <div class="form-row">
         <div class="form-item">
           <label class="form-label">申请人</label>
-          <a-input v-model:value="formData.applicant" placeholder="请输入申请人" disabled />
+          <a-input v-model:value="formData.applicant" placeholder="请输入申请人" :disabled="true" />
         </div>
         <div class="form-item">
           <label class="form-label">申请日期</label>
-          <a-date-picker v-model:value="formData.applicationDate" style="width: 100%" />
+          <a-date-picker v-model:value="formData.applicationDate" style="width: 100%" :disabled="isReadOnly" />
         </div>
         <div class="form-item">
           <label class="form-label required">紧急程度</label>
-          <a-select v-model:value="formData.urgencyLevel" placeholder="请选择紧急程度" style="width: 100%">
+          <a-select v-model:value="formData.urgencyLevel" placeholder="请选择紧急程度" style="width: 100%" :disabled="isReadOnly">
             <a-select-option value="high">高 (1天内处理)</a-select-option>
             <a-select-option value="medium">中 (3天内处理)</a-select-option>
             <a-select-option value="low">低 (7天内处理)</a-select-option>
@@ -51,36 +51,40 @@
           <div class="header-cell">操作</div>
         </div>
         <div class="table-body">
-          <div v-for="(policy, index) in formData.policies" :key="index" class="table-row" :class="{ 'row-conflict': conflictingRows.has(index) }">
+          <div v-for="(policy, index) in formData.policies" :key="index" class="table-row">
             <div class="table-cell">{{ index + 1 }}</div>
-            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
-              <a-select v-model:value="policy.sourceType" placeholder="请选择" style="width: 100%" @change="() => { policy.sourceSystem = ''; policy.sourceAddress = ''; if(policy.sourceType === 'ipScoperAddress') { policy.sourceSystem = 'internal'; } }">
+            <div class="table-cell">
+              <a-select v-model:value="policy.sourceType" placeholder="请选择" style="width: 100%" :disabled="isReadOnly" @change="() => { policy.sourceSystem = ''; policy.sourceAddress = ''; if(policy.sourceType === 'ipScoperAddress') { policy.sourceSystem = 'internal'; } }">
                 <a-select-option value="internalApplicationAddress">内部应用地址</a-select-option>
-                <a-select-option value="dbAddress">内部数据库地址</a-select-option>
                 <a-select-option value="ipScoperAddress">内部网段地址</a-select-option>
-                <a-select-option value="externalAddress">外部地址</a-select-option>
+                <a-select-option value="externalAddress">手工输入地址</a-select-option>
               </a-select>
             </div>
-            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
+            <div class="table-cell">
+              <a-input
+                v-if="policy.sourceType === 'externalAddress'"
+                v-model:value="policy.sourceSystem"
+                placeholder="请输入系统名称"
+                :disabled="isReadOnly"
+              />
               <a-select 
+                v-else
                 v-model:value="policy.sourceSystem" 
                 placeholder="请选择" 
                 style="width: 100%"
                 :options="getSystemOptions(policy.sourceType)"
                 show-search
                 :filter-option="(input, option) => option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0"
-                :disabled="policy.sourceType === 'externalAddress' || policy.sourceType === 'ipScoperAddress'"
+                :disabled="isReadOnly || policy.sourceType === 'ipScoperAddress'"
                 @change="() => { 
                   policy.sourceAddress = ''; 
                   if(policy.sourceType === 'internalApplicationAddress') {
                     fetchCmdbSystemIps(policy.sourceSystem, 'source');
-                  } else if(policy.sourceType === 'externalAddress') {
-                    policy.sourceSystem = 'external';
                   }
                 }"
               />
               </div>
-            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
+            <div class="table-cell">
               <a-select 
                 v-if="policy.sourceType === 'internalApplicationAddress' || policy.sourceType === 'ipScoperAddress'"
                 v-model:value="policy.sourceAddress" 
@@ -88,44 +92,49 @@
                 style="width: 100%"
                 :options="getAddressOptions(policy.sourceType, policy.sourceSystem, 'source')"
                 show-search
-                :mode="policy.sourceType === 'internalApplicationAddress' ? 'multiple' : undefined"
+                :mode="(policy.sourceType === 'internalApplicationAddress' || policy.sourceType === 'ipScoperAddress') ? 'multiple' : undefined"
                 :filter-option="(input, option) => option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0"
+                :disabled="isReadOnly"
               />
               <a-input 
                 v-else
                 v-model:value="policy.sourceAddress" 
-                placeholder="IP以逗号分隔，如: 192.168.1.1,10.0.0.1" 
-                @blur="() => { if (policy.sourceType === 'externalAddress' && policy.sourceAddress) { validateExternalIp(policy.sourceAddress, '源地址'); } }"
+                placeholder="IP/网段以逗号分隔，如: 192.168.1.1,10.0.0.1" 
+                :disabled="isReadOnly"
               />
             </div>
-            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
-              <a-select v-model:value="policy.destType" placeholder="请选择" style="width: 100%" @change="() => { policy.destSystem = ''; policy.destAddress = ''; if(policy.destType === 'ipScoperAddress') { policy.destSystem = 'internal'; } }">
+            <div class="table-cell">
+              <a-select v-model:value="policy.destType" placeholder="请选择" style="width: 100%" :disabled="isReadOnly" @change="() => { policy.destSystem = ''; policy.destAddress = ''; if(policy.destType === 'ipScoperAddress') { policy.destSystem = 'internal'; } }">
                 <a-select-option value="internalApplicationAddress">内部应用地址</a-select-option>
-                <a-select-option value="dbAddress">内部数据库地址</a-select-option>
                 <a-select-option value="ipScoperAddress">内部网段地址</a-select-option>
-                <a-select-option value="externalAddress">外部地址</a-select-option>
+                <a-select-option value="externalAddress">手工输入地址</a-select-option>
               </a-select>
             </div>
-            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
+            <div class="table-cell">
+              <a-input
+                v-if="policy.destType === 'externalAddress'"
+                v-model:value="policy.destSystem"
+                placeholder="请输入系统名称"
+                :disabled="isReadOnly"
+              />
               <a-select 
+                v-else
                 v-model:value="policy.destSystem" 
                 placeholder="请选择" 
                 style="width: 100%"
                 :options="getSystemOptions(policy.destType)"
                 show-search
                 :filter-option="(input, option) => option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0"
-                :disabled="policy.destType === 'externalAddress' || policy.destType === 'ipScoperAddress'"
+                :disabled="isReadOnly || policy.destType === 'ipScoperAddress'"
                 @change="() => { 
                   policy.destAddress = ''; 
                   if(policy.destType === 'internalApplicationAddress') {
                     fetchCmdbSystemIps(policy.destSystem, 'dest');
-                  } else if(policy.destType === 'externalAddress') {
-                    policy.destSystem = 'external';
                   }
                 }"
               />
             </div>
-            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
+            <div class="table-cell">
               <a-select 
                 v-if="policy.destType === 'internalApplicationAddress' || policy.destType === 'ipScoperAddress'"
                 v-model:value="policy.destAddress" 
@@ -133,14 +142,15 @@
                 style="width: 100%"
                 :options="getAddressOptions(policy.destType, policy.destSystem, 'dest')"
                 show-search
-                :mode="policy.destType === 'internalApplicationAddress' ? 'multiple' : undefined"
+                :mode="(policy.destType === 'internalApplicationAddress' || policy.destType === 'ipScoperAddress') ? 'multiple' : undefined"
                 :filter-option="(input, option) => option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0"
+                :disabled="isReadOnly"
               />
               <a-input 
                 v-else
                 v-model:value="policy.destAddress" 
                 placeholder="IP以逗号分隔，如: 192.168.1.1,10.0.0.1" 
-                @blur="() => { if (policy.destType === 'externalAddress' && policy.destAddress) { validateExternalIp(policy.destAddress, '目的地址'); } }"
+                :disabled="isReadOnly"
               />
             </div>
             <!-- <div class="table-cell">
@@ -150,31 +160,34 @@
                 <a-select-option value="web">Web服务</a-select-option>
               </a-select>
             </div> -->
-            <div class="table-cell" :class="{ 'row-conflict': conflictingRows.has(index) }">
+            <div class="table-cell">
               <a-input 
                 v-model:value="policy.port" 
                 placeholder="如: 80,443" 
-                @blur="validatePort(policy.port)"
+                :disabled="isReadOnly"
               />
             </div>
             <div class="table-cell">
-              <a-select v-model:value="policy.protocol" placeholder="请选择" style="width: 100%">
+              <a-select v-model:value="policy.protocol" placeholder="请选择" style="width: 100%" :disabled="isReadOnly">
                 <a-select-option value="tcp">TCP</a-select-option>
                 <a-select-option value="udp">UDP</a-select-option>
               </a-select>
             </div>
             <div class="table-cell">
-              <a-switch v-model:checked="policy.longConnection" />
+              <a-switch v-model:checked="policy.longConnection" :disabled="isReadOnly" />
             </div>
             <div class="table-cell">
-              <a-button type="text" danger @click="removePolicy(index)">
+              <a-button type="text" @click="copyPolicy(index)" :disabled="isReadOnly" style="margin-right: 8px;">
+                <Icon icon="ant-design:copy-outlined" />
+              </a-button>
+              <a-button type="text" danger @click="removePolicy(index)" :disabled="isReadOnly">
                 <Icon icon="ant-design:delete-outlined" />
               </a-button>
             </div>
           </div>
         </div>
         <div class="add-policy-btn">
-          <a-button type="primary" @click="addPolicy">
+          <a-button type="primary" @click="addPolicy" :disabled="isReadOnly">
             <Icon icon="ant-design:plus-outlined" />
             添加策略行
           </a-button>
@@ -182,31 +195,6 @@
       </div>
     </div>
 
-    <!-- 生效时间 -->
-    <div class="form-section">
-      <div class="section-header">
-        <div class="section-title-bar"></div>
-        <h2 class="section-title">生效时间</h2>
-      </div>
-      <div class="effective-time-section">
-        <div class="form-item">
-          <label class="form-label">生效类型</label>
-          <a-radio-group v-model:value="formData.effectiveType">
-            <a-radio value="immediate">立即生效</a-radio>
-            <a-radio value="scheduled">定时生效</a-radio>
-          </a-radio-group>
-        </div>
-        <div v-if="formData.effectiveType === 'scheduled'" class="form-item">
-          <label class="form-label required">生效时间</label>
-          <a-date-picker 
-            v-model:value="formData.effectiveDate" 
-            show-time 
-            placeholder="请选择生效时间"
-            style="width: 100%" 
-          />
-        </div>
-      </div>
-    </div>
 
     <!-- 审批备注 -->
     <div class="form-section">
@@ -220,36 +208,57 @@
           placeholder="请说明策略开通的原因和用途..."
           :rows="4"
           class="approval-textarea"
+          :disabled="isReadOnly"
         />
+        <div v-if="currentTicketId" class="download-button-wrapper">
+          <a-button 
+            type="primary"
+            @click="handleDownloadAttachment"
+          >
+            <Icon icon="ant-design:download-outlined" />
+            下载附件
+          </a-button>
+        </div>
         <div class="action-buttons">
-          <a-button type="primary" size="large" @click="submitApplication">
+          <a-button type="primary" size="large" @click="submitApplication" :disabled="isReadOnly">
             <Icon icon="ant-design:check-outlined" />
             提交申请
           </a-button>
-          <a-button size="large" @click="saveDraft">
+          <a-button size="large" @click="saveDraft" :disabled="isReadOnly">
             <Icon icon="ant-design:save-outlined" />
             保存草稿
           </a-button>
-          <a-button size="large" @click="resetForm">
+          <a-button size="large" @click="resetForm" :disabled="isReadOnly">
             <Icon icon="ant-design:reload-outlined" />
             重置表单
+          </a-button>
+          <a-button 
+            v-if="currentTicketId && !isReadOnly" 
+            size="large" 
+            danger 
+            @click="handleDiscardTicket"
+          >
+            <Icon icon="ant-design:delete-outlined" />
+            废弃
           </a-button>
         </div>
       </div>
     </div>
   </div>
+  
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, ref, watch } from 'vue';
-import { message } from 'ant-design-vue';
+import { defineComponent, reactive, ref, watch, computed } from 'vue';
+import { message, Modal } from 'ant-design-vue';
 import Icon from '@/components/Icon';
 import dayjs from 'dayjs';
 import { useUserStore } from '/@/store/modules/user';
 import { defHttp } from '/@/utils/http/axios';
 import { useRoute, useRouter } from 'vue-router';
 import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+// import { saveAs } from 'file-saver';
+import { downloadByData } from '/@/utils/file/download';
 
 export default defineComponent({
   name: 'FirewallPolicyApplication',
@@ -262,7 +271,7 @@ export default defineComponent({
     const currentUser = userStore.getUserInfo?.realname || userStore.getUserInfo?.username || '当前用户';
     const route = useRoute();
     const router = useRouter();
-    const environmentType = route.query.type === 'production' ? '生产' : '测试'; // 从路由参数获取环境类型
+    const environmentType = '生产'; // 从路由参数获取环境类型
 
     // CMDB系统数据
     const cmdbSystems = ref<any[]>([]);
@@ -271,8 +280,16 @@ export default defineComponent({
     const ipScopeList = ref<any[]>([]);
     const loading = ref(false);
     
-    // 冲突行标记
-    const conflictingRows = ref<Set<number>>(new Set());
+    // 当前工单ID和状态
+    const currentTicketId = ref<number | null>(null);
+    const currentTicketStatus = ref<string>('');
+    
+    // 判断是否为只读模式（状态为processing/resolved/closed时只读）
+    const isReadOnly = computed(() => {
+      return currentTicketStatus.value === 'processing' || 
+             currentTicketStatus.value === 'resolved' || 
+             currentTicketStatus.value === 'closed';
+    });
 
     const formData = reactive({
       applicant: currentUser,
@@ -349,25 +366,11 @@ export default defineComponent({
       }
     };
 
-    // 获取数据库关联应用系统（Mock数据）
-    const getDatabaseSystems = () => {
-      return [
-        { label: 'MySQL-财务库', value: 'mysql-finance' },
-        { label: 'Oracle-HR库', value: 'oracle-hr' },
-        { label: 'PostgreSQL-OA库', value: 'postgresql-oa' },
-        { label: 'MongoDB-日志库', value: 'mongodb-log' },
-      ];
-    };
-
     // 根据系统值获取展示名称（用于将objectId映射为中文名称）
     const getSystemDisplayName = (type: string, systemValue: string) => {
       if (!systemValue) return '';
-      if (type === 'externalAddress') return '外部应用系统';
+      if (type === 'externalAddress') return systemValue || '手工输入应用系统';
       if (type === 'ipScoperAddress') return '内部网段';
-      if (type === 'dbAddress') {
-        const db = getDatabaseSystems().find((d) => d.value === systemValue);
-        return db ? db.label : systemValue;
-      }
       if (type === 'internalApplicationAddress') {
         const hit = cmdbSystems.value.find((s: any) => s.objectId === systemValue);
         return hit ? hit.businessName : systemValue;
@@ -382,10 +385,8 @@ export default defineComponent({
           label: system.businessName,
           value: system.objectId,
         }));
-      } else if (type === 'dbAddress') {
-        return getDatabaseSystems();
       } else if (type === 'externalAddress') {
-        return [{ label: '外部应用系统', value: 'external' }];
+        return [{ label: '手工输入应用系统', value: 'external' }];
       } else if (type === 'ipScoperAddress') {
         return [{ label: '内部网段', value: 'internal' }];
       }
@@ -409,73 +410,14 @@ export default defineComponent({
       return [];
     };
 
-    // IP格式校验
-    const validateIpFormat = (ip: string) => {
-      const ipRegex = /^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/;
-      const ips = ip.split(',').map(i => i.trim()).filter(i => i.length > 0);
-      if (ips.length === 0) return false;
-      
-      // 验证每个IP地址格式和范围
-      return ips.every(i => {
-        if (!ipRegex.test(i)) return false;
-        const parts = i.split('.');
-        return parts.every(part => {
-          const num = parseInt(part);
-          return num >= 0 && num <= 255;
-        });
-      });
-    };
-
-    // CMDB网段校验（Mock）
-    const isInCmdbRange = (ip: string) => {
-      const cmdbRanges = ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'];
-      const ips = ip.split(',').map(i => i.trim());
-      return ips.some(i => {
-        return cmdbRanges.some(range => {
-          const [rangeIp] = range.split('/');
-          // 简单的网段判断逻辑
-          return i.startsWith(rangeIp.split('.').slice(0, 2).join('.'));
-        });
-      });
-    };
-
-    // 端口校验
-    const validatePort = (port: string) => {
-      const ports = port.split(',').map(p => p.trim());
-      return ports.every(p => {
-        const num = parseInt(p);
-        return !isNaN(num) && num >= 1 && num <= 65535;
-      });
-    };
-
-    // 校验外部IP地址格式
-    const validateExternalIp = (ip: string, addressType: string) => {
-      if (!ip || !ip.trim()) {
-        return;
-      }
-      
-      if (!validateIpFormat(ip)) {
-        message.warning(`${addressType}IP格式不正确，请输入正确的IP地址（多个IP用逗号分隔）`);
-        return;
-      }
-      
-      // 检查是否在CMDB网段内
-      const ips = ip.split(',').map(i => i.trim()).filter(i => i.length > 0);
-      for (const singleIp of ips) {
-        if (isInCmdbRange(singleIp)) {
-          message.warning(`${addressType} ${singleIp} 不能在CMDB网段内`);
-          return;
-        }
-      }
-    };
+    // 前端格式校验逻辑已移除，统一由后端进行校验
 
     // 辅助函数：将内部值映射为显示文本
     const mapToDisplayText = (value: any, type: string) => {
       if (type === 'addressType') {
         switch (value) {
           case 'internalApplicationAddress': return '内部应用地址';
-          case 'dbAddress': return '内部数据库地址';
-          case 'externalAddress': return '外部地址';
+          case 'externalAddress': return '手工输入地址';
           case 'ipScoperAddress': return '内部网段地址';
           default: return value;
         }
@@ -487,36 +429,22 @@ export default defineComponent({
       return value;
     };
 
-    // 检测并标记三字段联合冲突的行
-    const detectConflicts = () => {
-      conflictingRows.value.clear();
-      const comboMap = new Map<string, number[]>();
-
-      formData.policies.forEach((policy, index) => {
-        const comboKey = [
-          policy.sourceSystem || '',
-          policy.destSystem || '',
-          policy.port || ''
-        ].join('||');
-        if (!comboMap.has(comboKey)) {
-          comboMap.set(comboKey, []);
-        }
-        comboMap.get(comboKey)!.push(index);
-      });
-
-      const indices = new Set<number>();
-      comboMap.forEach(rows => {
-        if (rows.length > 1) {
-          rows.forEach(row => indices.add(row));
-        }
-      });
-
-      conflictingRows.value = indices;
+    const formatAddressDisplay = (address: string | string[]) => {
+      if (Array.isArray(address)) {
+        return address.join(',');
+      }
+      return address || '未填写';
     };
 
-    // 监听策略变化，检测冲突
+    // 判断是否可能是“手工输入网段”（简单规则：IPv4 且以 .0 结尾，且不包含掩码）
+    const isLikelyNetworkWithoutMask = (addr: string) => {
+      if (!addr || addr.includes('/')) return false;
+      const parts = addr.split('.');
+      if (parts.length !== 4) return false;
+      return parts[3] === '0';
+    };
+
     watch(() => formData.policies, () => {
-      detectConflicts();
       formData.approvalRemarks = generateApplicationDescription();
     }, { deep: true });
 
@@ -586,147 +514,36 @@ export default defineComponent({
       }
     };
 
-    // 生成XLS文件
-    const generateXlsFile = () => {
-      const data: any[] = [];
-      // 表头
-      data.push([
-        '序号', '源地址', '源地址、端口说明', '源地址类型', '目的地址', '目的端口1', '至目的端口2', '目的地址、端口说明', '目的地址类型',
-        '传输层协议', '是否为长连接', '策略用途及必要性', '安全性', '策略使用期限', '测试峰值流量'
-      ]);
-
-      // 数据行
-      let rowIndex = 1;
-      formData.policies.forEach((policy) => {
-        // 处理源地址和目的地址，支持多选（数组）或单选（字符串）
-        let sourceAddressGroups: string[][] = [];
-        let destAddressGroups: string[][] = [];
-        
-        // 处理源地址
-        if (Array.isArray(policy.sourceAddress)) {
-          // 多选情况，分组连续IP
-          sourceAddressGroups = groupConsecutiveIPs(policy.sourceAddress);
-        } else if (policy.sourceType === 'externalAddress' && policy.sourceAddress) {
-          // 外部地址类型，可能是逗号分隔的字符串，需要解析和分组
-          const ips = policy.sourceAddress.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0);
-          if (ips.length > 0) {
-            sourceAddressGroups = groupConsecutiveIPs(ips);
-          } else {
-            sourceAddressGroups = [[policy.sourceAddress]];
-          }
-        } else {
-          // 单选情况，作为单个组
-          sourceAddressGroups = [[policy.sourceAddress || '']];
-        }
-        
-        // 处理目的地址
-        if (Array.isArray(policy.destAddress)) {
-          // 多选情况，分组连续IP
-          destAddressGroups = groupConsecutiveIPs(policy.destAddress);
-        } else if (policy.destType === 'externalAddress' && policy.destAddress) {
-          // 外部地址类型，可能是逗号分隔的字符串，需要解析和分组
-          const ips = policy.destAddress.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0);
-          if (ips.length > 0) {
-            destAddressGroups = groupConsecutiveIPs(ips);
-          } else {
-            destAddressGroups = [[policy.destAddress]];
-          }
-        } else {
-          // 单选情况，作为单个组
-          destAddressGroups = [[policy.destAddress || '']];
-        }
-
-        // 处理端口，最多支持10个端口，用逗号分隔
-        let portDisplay = '';
-        if (policy.port) {
-          const ports = policy.port.split(',').map(p => p.trim()).slice(0, 10); // 最多10个端口
-          portDisplay = ports.join(',');
-        }
-
-        // 处理策略使用期限
-        const policyUsagePeriod = formData.effectiveType === 'immediate'
-          ? '立即生效'
-          : formData.effectiveDate
-            ? `定时生效 (${dayjs(formData.effectiveDate).format('YYYY-MM-DD HH:mm:ss')})`
-            : '定时生效 (未选择时间)';
-
-        // 为每个源地址组和目的地址组的组合生成一行
-        for (let sourceIndex = 0; sourceIndex < sourceAddressGroups.length; sourceIndex++) {
-          for (let destIndex = 0; destIndex < destAddressGroups.length; destIndex++) {
-            const sourceGroup = sourceAddressGroups[sourceIndex];
-            const destGroup = destAddressGroups[destIndex];
-            
-            const sourceAddressDisplay = compressIPGroup(sourceGroup);
-            const destAddressDisplay = compressIPGroup(destGroup);
-
-            data.push([
-              rowIndex++,
-              sourceAddressDisplay,
-              getSystemDisplayName(policy.sourceType, policy.sourceSystem),
-              mapToDisplayText(policy.sourceType, 'addressType'),
-              destAddressDisplay,
-              portDisplay, // 端口字段，最多10个端口用逗号分隔
-              '', // 至目的端口2字段留空
-              getSystemDisplayName(policy.destType, policy.destSystem),
-              mapToDisplayText(policy.destType, 'addressType'),
-              mapToDisplayText(policy.protocol, 'protocol'),
-              mapToDisplayText(policy.longConnection, 'longConnection'),
-              formData.approvalRemarks,
-              '', // 安全性 (图片中为空)
-              policyUsagePeriod,
-              '' // 测试峰值流量 (图片中为空)
-            ]);
-          }
-        }
-      });
-
-      const ws = XLSX.utils.aoa_to_sheet(data); // 将二维数组转换为工作表
-      const wb = XLSX.utils.book_new(); // 创建新的工作簿
-      XLSX.utils.book_append_sheet(wb, ws, '防火墙策略申请'); // 将工作表添加到工作簿
-
-      // 生成文件名：前端选择的A系统到B系统的防火墙安全策略申请表（XX环境）
-      let sourceSystemName = '未知系统';
-      let destSystemName = '未知系统';
-
-      if (formData.policies.length > 0) {
-        const firstPolicy = formData.policies[0]; // 取第一条策略作为文件名参考
-        sourceSystemName = getSystemDisplayName(firstPolicy.sourceType, firstPolicy.sourceSystem);
-        destSystemName = getSystemDisplayName(firstPolicy.destType, firstPolicy.destSystem);
-      }
-
-      const filename = `${sourceSystemName}到${destSystemName}的防火墙安全策略申请表（${environmentType}环境）.xls`;
-
-      // 写入并下载文件
-      const wbout = XLSX.write(wb, { bookType: 'xls', type: 'array' });
-      saveAs(new Blob([wbout], { type: 'application/octet-stream' }), filename);
-    };
-
     // 自动生成申请说明
-      const generateApplicationDescription = () => {
-      const policy = formData.policies[0];
-      if (!policy.sourceType || !policy.sourceSystem || !policy.destType || !policy.destSystem) {
+    const generateApplicationDescription = () => {
+      if (!formData.policies || formData.policies.length === 0) {
         return '';
       }
 
-      const sourceTypeMap = {
-        'internalApplicationAddress': '内部应用系统',
-        'dbAddress': '内部数据库',
-        'externalAddress': '外部系统'
-      };
+      const descriptionLines: string[] = [];
 
-      const destTypeMap = {
-        'internalApplicationAddress': '内部应用系统',
-        'dbAddress': '内部数据库关联系统',
-        'externalAddress': '外部系统'
-      };
+      formData.policies.forEach((policy, index) => {
+        if (!policy.sourceType || !policy.sourceSystem || !policy.destType || !policy.destSystem) {
+          return;
+        }
 
-      const sourceTypeText = sourceTypeMap[policy.sourceType] || '未知类型';
-      const destTypeText = destTypeMap[policy.destType] || '未知类型';
+        const sourceName = getSystemDisplayName(policy.sourceType, policy.sourceSystem);
+        const destName = getSystemDisplayName(policy.destType, policy.destSystem);
+        const sourceAddressText = formatAddressDisplay(policy.sourceAddress);
+        const destAddressText = formatAddressDisplay(policy.destAddress);
+        const portText = policy.port ? `，端口：${policy.port}` : '';
+        const protocolText = policy.protocol ? `，协议：${policy.protocol.toUpperCase()}` : '';
 
-      const sourceName = getSystemDisplayName(policy.sourceType, policy.sourceSystem);
-      const destName = getSystemDisplayName(policy.destType, policy.destSystem);
+        descriptionLines.push(
+          `策略${index + 1}：关于开通${sourceName}（${sourceAddressText}）到${destName}（${destAddressText}）的防火墙策略${portText}${protocolText}`
+        );
+      });
 
-      return `关于开通${sourceTypeText}-${sourceName}到${destTypeText}-${destName}的防火墙策略，生效时间为${formData.effectiveType === 'immediate' ? '立即生效' : formData.effectiveDate}`;
+      if (descriptionLines.length === 0) {
+        return '';
+      }
+
+      return descriptionLines.join('\n');
     };
 
     // 监听策略变化，自动更新申请说明
@@ -734,14 +551,14 @@ export default defineComponent({
       formData.approvalRemarks = generateApplicationDescription();
     }, { deep: true });
 
-    // 监听地址类型变化，自动填充系统名称
+    // 监听地址类型变化，自动清空外部类型的系统名称，保持手工输入
     watch(() => formData.policies, (newPolicies) => {
       newPolicies.forEach(policy => {
-        if (policy.sourceType === 'externalAddress' && policy.sourceSystem !== 'external') {
-          policy.sourceSystem = 'external';
+        if (policy.sourceType !== 'externalAddress' && policy.sourceSystem === 'external') {
+          policy.sourceSystem = '';
         }
-        if (policy.destType === 'externalAddress' && policy.destSystem !== 'external') {
-          policy.destSystem = 'external';
+        if (policy.destType !== 'externalAddress' && policy.destSystem === 'external') {
+          policy.destSystem = '';
         }
       });
     }, { deep: true });
@@ -764,117 +581,335 @@ export default defineComponent({
       formData.policies.splice(index, 1);
     };
 
+    const copyPolicy = (index: number) => {
+      if (index < 0 || index >= formData.policies.length) {
+        message.warning('无法复制该策略');
+        return;
+      }
+      const policyToCopy = formData.policies[index];
+      // 深拷贝策略对象
+      const copiedPolicy: any = {
+        sourceType: policyToCopy.sourceType,
+        sourceSystem: policyToCopy.sourceSystem,
+        destType: policyToCopy.destType,
+        destSystem: policyToCopy.destSystem,
+        port: policyToCopy.port,
+        protocol: policyToCopy.protocol,
+        longConnection: policyToCopy.longConnection,
+      };
+      // 处理 sourceAddress 和 destAddress（可能是字符串或数组）
+      if (Array.isArray(policyToCopy.sourceAddress)) {
+        copiedPolicy.sourceAddress = [...policyToCopy.sourceAddress];
+      } else {
+        copiedPolicy.sourceAddress = policyToCopy.sourceAddress || '';
+      }
+      if (Array.isArray(policyToCopy.destAddress)) {
+        copiedPolicy.destAddress = [...policyToCopy.destAddress];
+      } else {
+        copiedPolicy.destAddress = policyToCopy.destAddress || '';
+      }
+      // 插入到下一行
+      formData.policies.splice(index + 1, 0, copiedPolicy);
+      message.success('策略已复制到下一行');
+    };
+
     const submitApplication = () => {
-      // 先检测冲突
-      detectConflicts();
-      
-      // 如果有冲突，不允许提交
-      if (conflictingRows.value.size > 0) {
-        message.error('源/目的地址应用系统、端口三者需保证唯一，不允许分隔多行');
-        return;
-      }
+      // 校验逻辑已移到后端，前端直接提交
+      submitApplicationWithFile();
+    };
 
-      // 校验必填字段
-      const errors: string[] = [];
-
-      // 校验基本信息
-      if (!formData.urgencyLevel) {
-        errors.push('紧急程度');
-      }
-
-      // 校验策略配置
-      for (let i = 0; i < formData.policies.length; i++) {
-        const policy = formData.policies[i];
-        const policyIndex = i + 1;
+    // 提交申请（生成文件、上传ITIL、发起流程）
+    const submitApplicationWithFile = async () => {
+      try {
+        loading.value = true;
         
-        if (!policy.sourceType) {
-          errors.push(`第${policyIndex}行源地址类型`);
-        }
-        if (!policy.sourceSystem) {
-          errors.push(`第${policyIndex}行源地址应用系统`);
-        }
-        if (!policy.sourceAddress || (Array.isArray(policy.sourceAddress) && policy.sourceAddress.length === 0)) {
-          errors.push(`第${policyIndex}行源地址`);
-        }
-        if (!policy.destType) {
-          errors.push(`第${policyIndex}行目的地址类型`);
-        }
-        if (!policy.destSystem) {
-          errors.push(`第${policyIndex}行目的地址应用系统`);
-        }
-        if (!policy.destAddress || (Array.isArray(policy.destAddress) && policy.destAddress.length === 0)) {
-          errors.push(`第${policyIndex}行目的地址`);
-        }
-        if (!policy.port) {
-          errors.push(`第${policyIndex}行端口`);
-        }
-        if (!policy.protocol) {
-          errors.push(`第${policyIndex}行协议`);
-        }
-      }
+        // 1. 生成 Excel 文件（在内存中）
+        const data: any[] = [];
+        // 表头（保持原字段数）
+        data.push([
+          '序号', '源地址', '源地址、端口说明', '源地址类型', '目的地址', '目的端口1', '至目的端口2', '目的地址、端口说明', '策略用途及必要性',
+          '传输层协议', '是否为长连接', '动作', '安全性', '策略使用期限', '测试峰值流量'
+        ]);
 
-      // 校验生效时间
-      if (formData.effectiveType === 'scheduled' && !formData.effectiveDate) {
-        errors.push('生效时间');
-      }
+        // 数据行
+        let rowIndex = 1;
+        formData.policies.forEach((policy) => {
+          // 处理源地址和目的地址，支持多选（数组）或单选（字符串）
+          let sourceAddressGroups: string[][] = [];
+          let destAddressGroups: string[][] = [];
+          
+          // 处理源地址
+          if (Array.isArray(policy.sourceAddress)) {
+            sourceAddressGroups = groupConsecutiveIPs(policy.sourceAddress);
+          } else if (policy.sourceType === 'externalAddress' && policy.sourceAddress) {
+            const ips = policy.sourceAddress.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0);
+            if (ips.length > 0) {
+              sourceAddressGroups = groupConsecutiveIPs(ips);
+            } else {
+              sourceAddressGroups = [[policy.sourceAddress]];
+            }
+          } else {
+            sourceAddressGroups = [[policy.sourceAddress || '']];
+          }
+          
+          // 处理目的地址
+          if (Array.isArray(policy.destAddress)) {
+            destAddressGroups = groupConsecutiveIPs(policy.destAddress);
+          } else if (policy.destType === 'externalAddress' && policy.destAddress) {
+            const ips = policy.destAddress.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0);
+            if (ips.length > 0) {
+              destAddressGroups = groupConsecutiveIPs(ips);
+            } else {
+              destAddressGroups = [[policy.destAddress]];
+            }
+          } else {
+            destAddressGroups = [[policy.destAddress || '']];
+          }
 
-      // 校验申请说明
-      if (!formData.approvalRemarks.trim()) {
-        errors.push('申请说明');
-      }
+          // 处理端口
+          let portDisplay = '';
+          if (policy.port) {
+            const ports = policy.port.split(',').map(p => p.trim()).slice(0, 10);
+            portDisplay = ports.join(',');
+          }
 
-      // 如果有必填字段未填写，显示错误信息
-      if (errors.length > 0) {
-        message.error(`请填写以下必填字段：${errors.join('、')}`);
-        return;
-      }
+          // 为每个源地址组和目的地址组的组合生成一行
+          for (let sourceIndex = 0; sourceIndex < sourceAddressGroups.length; sourceIndex++) {
+            for (let destIndex = 0; destIndex < destAddressGroups.length; destIndex++) {
+              const sourceGroup = sourceAddressGroups[sourceIndex];
+              const destGroup = destAddressGroups[destIndex];
+              
+              let sourceAddressDisplay = compressIPGroup(sourceGroup);
+              let destAddressDisplay = compressIPGroup(destGroup);
 
-      // 校验端口格式
-      for (const policy of formData.policies) {
-        if (policy.port && !validatePort(policy.port)) {
-          message.warning('端口号必须在1-65535范围内');
+              // 当地址类型为网段(ipScoperAddress)时，导出到 Excel 需要追加 /24（若原值中未包含掩码）
+              if (policy.sourceType === 'ipScoperAddress' && sourceAddressDisplay && !sourceAddressDisplay.includes('/')) {
+                sourceAddressDisplay = `${sourceAddressDisplay}/24`;
+              }
+              if (policy.destType === 'ipScoperAddress' && destAddressDisplay && !destAddressDisplay.includes('/')) {
+                destAddressDisplay = `${destAddressDisplay}/24`;
+              }
+
+              // 手工输入网段（externalAddress 场景）：导出时也自动补 /24
+              if (policy.sourceType === 'externalAddress' && sourceAddressDisplay && isLikelyNetworkWithoutMask(sourceAddressDisplay)) {
+                sourceAddressDisplay = `${sourceAddressDisplay}/24`;
+              }
+              if (policy.destType === 'externalAddress' && destAddressDisplay && isLikelyNetworkWithoutMask(destAddressDisplay)) {
+                destAddressDisplay = `${destAddressDisplay}/24`;
+              }
+
+              data.push([
+                rowIndex++,
+                sourceAddressDisplay,
+                '',
+                '',
+                destAddressDisplay,
+                portDisplay,
+                '',
+                '',
+                '',
+                mapToDisplayText(policy.protocol, 'protocol'),
+                mapToDisplayText(policy.longConnection, 'longConnection'),
+                '',
+                '',
+                '',
+                ''
+              ]);
+            }
+          }
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '防火墙策略申请');
+
+        // 生成文件名
+      let sourceSystemName = '未知系统';
+      let destSystemName = '未知系统';
+      if (formData.policies.length > 0) {
+          const firstPolicy = formData.policies[0];
+          sourceSystemName = getSystemDisplayName(firstPolicy.sourceType, firstPolicy.sourceSystem);
+          destSystemName = getSystemDisplayName(firstPolicy.destType, firstPolicy.destSystem);
+        }
+        const filename = `${sourceSystemName}到${destSystemName}的防火墙安全策略申请表（${environmentType}环境）.xls`;
+
+        // 将工作簿转换为二进制数据
+        const wbout = XLSX.write(wb, { bookType: 'xls', type: 'array' });
+        
+        // 转换为 Base64 - 使用更安全的方式处理大文件
+        let base64Content = '';
+        const uint8Array = new Uint8Array(wbout);
+        const chunkSize = 8192;
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+          const chunk = uint8Array.slice(i, i + chunkSize);
+          base64Content += String.fromCharCode.apply(null, Array.from(chunk));
+        }
+        base64Content = btoa(base64Content);
+
+        // 2. 构建提交数据
+        const urgencyMap: Record<string, string> = {
+          'high': '1',
+          'medium': '3',
+          'low': '4'
+        };
+        
+        const solutionTimeMap: Record<string, string> = {
+          'high': '5', // 1天
+          'medium': '6', // 3天
+          'low': '8' // 7天
+        };
+
+        const queryId = route.query.id;
+        let ticketId: number | null = null;
+        if (queryId) {
+          if (typeof queryId === 'string') ticketId = parseInt(queryId);
+          else if (Array.isArray(queryId)) ticketId = parseInt(queryId[0] || '0');
+          else ticketId = Number(queryId);
+          if (isNaN(ticketId) || ticketId <= 0) ticketId = null;
+        }
+
+        // 构建基本信息(base_info)
+        const baseInfo = {
+          applicant: formData.applicant,
+          applicationDate: formData.applicationDate ? dayjs(formData.applicationDate).format('YYYY-MM-DD HH:mm:ss') : null,
+          urgencyLevel: formData.urgencyLevel,
+          environmentType: environmentType,
+        };
+
+        // 构建工单信息(ticket_info) - 包含策略配置和生效时间
+        const ticketInfo = {
+          policies: formData.policies,
+          effectiveType: formData.effectiveType,
+          effectiveDate: formData.effectiveDate ? dayjs(formData.effectiveDate).format('YYYY-MM-DD HH:mm:ss') : null,
+        };
+        
+        const submitData = {
+          fileName: filename,
+          fileContent: base64Content,
+          ticketId: ticketId,
+          applyUser: username,
+          title: `防火墙策略申请-${sourceSystemName}到${destSystemName}`,
+          typeOne: '网络安全',
+          typeTwo: '生产防火墙策略开通',
+          priority: urgencyMap[formData.urgencyLevel] || '3',
+          solutiontime: solutionTimeMap[formData.urgencyLevel] || '6',
+          apply_info: formData.approvalRemarks,
+          base_info: baseInfo,
+          ticket_info: ticketInfo,
+          handler: '',
+          status: 'save',
+          source: '智能运维门户系统'
+        };
+
+        // 3. 调用后端提交接口
+        const result = await defHttp.post({
+          url: '/sys/home/submitTicket',
+          data: submitData
+        });
+
+        if (result) {
+          message.success('申请已提交，文件已上传到ITIL平台');
+          
+          // 同时下载文件到本地
+          // saveAs(new Blob([wbout], { type: 'application/octet-stream' }), filename);
+          
+          // 从返回结果中获取 processKey 和 processInstanceId
+          const processKey = result.processKey || result.result?.processKey;
+          const processInstanceId = result.processInstanceId || result.result?.processInstanceId;
+          
+          // 如果获取到流程信息，则在新窗口跳转到ITIL平台
+          if (processKey && processInstanceId) {
+            // const itilUrl = `http://10.58.229.95:8080/uniapp/ssoLogin?token=${username}&processKey=${processKey}&processInstanceId=${processInstanceId}`;
+            const itilUrl = `http://10.56.190.193/`;
+            window.open(itilUrl, '_blank');
+             // 如果没有流程信息，则跳转到工作台
+             await router.push('/dashboard/workbench');
+          } else {
+            // 如果没有流程信息，则跳转到工作台
+            await router.push('/dashboard/workbench');
+          }
+        }
+      } catch (error) {
+        console.error('提交申请失败:', error);
+        message.error('提交申请失败，请重试');
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    // 下载工单附件
+    const downloadTicketAttachment = async (ticketId: number) => {
+      try {
+        loading.value = true;
+        // 1. 先获取文件路径和文件名
+        const data = await defHttp.get({
+          url: '/sys/home/downloadTicketAttachment',
+          params: { id: ticketId }
+        });
+        
+        if (!data || !data.filePath) {
+          message.error('附件不存在');
           return;
         }
 
-        // 校验外部地址IP格式和网段
-        if (policy.sourceType === 'externalAddress' && policy.sourceAddress) {
-          // 校验IP格式（支持逗号分隔的多个IP）
-          if (!validateIpFormat(policy.sourceAddress)) {
-            message.warning('源地址IP格式不正确，请输入正确的IP地址（多个IP用逗号分隔）');
-            return;
-          }
-          // 检查是否在CMDB网段内（每个IP都要检查）
-          const sourceIps = policy.sourceAddress.split(',').map(ip => ip.trim());
-          for (const ip of sourceIps) {
-            if (isInCmdbRange(ip)) {
-              message.warning(`源地址 ${ip} 不能在CMDB网段内`);
-              return;
-            }
-          }
-        }
+        const filePath = data.filePath;
+        const fileName = data.fileName || filePath.split('/').pop() || '附件.xls';
+        
+        // 2. 使用blob方式下载文件，避免页面跳转
+        const blobData = await defHttp.get(
+          {
+            url: '/sys/home/downloadFile',
+            params: { filePath: filePath },
+            responseType: 'blob',
+          },
+          { isTransformResponse: false }
+        );
+        
+        // 3. 触发浏览器下载
+        downloadByData(blobData, fileName, 'application/vnd.ms-excel');
+        
+        message.success('附件下载成功');
+      } catch (error: any) {
+        console.error('下载附件失败:', error);
+        const errorMsg = error?.message || error?.response?.data?.message || '下载附件失败';
+        message.error(errorMsg);
+      } finally {
+        loading.value = false;
+      }
+    };
 
-        if (policy.destType === 'externalAddress' && policy.destAddress) {
-          // 校验IP格式（支持逗号分隔的多个IP）
-          if (!validateIpFormat(policy.destAddress)) {
-            message.warning('目的地址IP格式不正确，请输入正确的IP地址（多个IP用逗号分隔）');
-            return;
-          }
-          // 检查是否在CMDB网段内（每个IP都要检查）
-          const destIps = policy.destAddress.split(',').map(ip => ip.trim());
-          for (const ip of destIps) {
-            if (isInCmdbRange(ip)) {
-              message.warning(`目的地址 ${ip} 不能在CMDB网段内`);
-              return;
-            }
-          }
-        }
+    // 处理下载附件按钮点击
+    const handleDownloadAttachment = () => {
+      if (currentTicketId.value) {
+        downloadTicketAttachment(currentTicketId.value);
+      }
+    };
+
+    // 废弃工单
+    const handleDiscardTicket = () => {
+      if (!currentTicketId.value) {
+        message.warning('工单ID不存在');
+        return;
       }
 
-      // 所有校验通过，生成并下载 XLS 文件
-      generateXlsFile();
-
-      message.success('申请已提交，文件已生成并下载。');
-      console.log('提交申请:', formData);
+      Modal.confirm({
+        title: '确认废弃',
+        content: '确定要废弃此工单吗？废弃后工单将被删除，此操作不可恢复。',
+        okText: '确认',
+        cancelText: '取消',
+        onOk: async () => {
+          try {
+            await defHttp.delete({
+              url: `/sys/home/deleteTicket?id=${currentTicketId.value}`,
+            });
+            message.success('工单已废弃');
+            router.push('/dashboard/workbench');
+          } catch (error) {
+            console.error('废弃工单失败:', error);
+            message.error('废弃工单失败');
+          }
+        }
+      });
     };
 
     const saveDraft = async () => {
@@ -922,7 +957,7 @@ export default defineComponent({
           data: requestData
         });
         
-        message.success('草稿保存成功');
+      message.success('草稿保存成功');
         console.log('保存草稿:', requestData);
         
         // 跳转到工作台页面
@@ -960,12 +995,14 @@ export default defineComponent({
     const loadTicketData = async (ticketId: number) => {
       try {
         loading.value = true;
+        currentTicketId.value = ticketId;
         const data = await defHttp.get({
           url: '/sys/home/getTicketById',
           params: { id: ticketId }
         });
         
         if (data) {
+          currentTicketStatus.value = data.status || '';
           // 解析base_info
           if (data.baseInfo) {
             const baseInfo = typeof data.baseInfo === 'string' ? JSON.parse(data.baseInfo) : data.baseInfo;
@@ -1000,8 +1037,6 @@ export default defineComponent({
           // 设置申请说明
           formData.approvalRemarks = data.applyInfo || '';
           
-          // 触发冲突检测
-          detectConflicts();
         }
       } catch (error) {
         console.error('加载工单数据失败:', error);
@@ -1035,16 +1070,20 @@ export default defineComponent({
       formData,
       addPolicy,
       removePolicy,
+      copyPolicy,
       submitApplication,
       saveDraft,
       resetForm,
       getSystemOptions,
       getAddressOptions,
       fetchCmdbSystemIps,
-      validatePort,
-      validateExternalIp,
       loading,
-      conflictingRows,
+      downloadTicketAttachment,
+      currentTicketId,
+      currentTicketStatus,
+      handleDownloadAttachment,
+      isReadOnly,
+      handleDiscardTicket,
     };
   },
 });
@@ -1059,6 +1098,9 @@ export default defineComponent({
 
   .page-header {
     margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     
     .page-title {
       font-size: 24px;
@@ -1126,7 +1168,7 @@ export default defineComponent({
     
     .table-header {
       display: grid;
-      grid-template-columns: 20px 130px 200px 150px 130px 200px 150px 70px 70px 50px 50px;
+      grid-template-columns: 20px 130px 200px 150px 130px 200px 150px 70px 70px 50px 80px;
       gap: 10px;
       margin-bottom: 16px;
       
@@ -1149,7 +1191,7 @@ export default defineComponent({
 
       .table-row {
         display: grid;
-        grid-template-columns: 20px 130px 200px 150px 130px 200px 150px 70px 70px 50px 50px;
+        grid-template-columns: 20px 130px 200px 150px 130px 200px 150px 70px 70px 50px 80px;
         gap: 10px;
         margin-bottom: 16px;
         align-items: center;
@@ -1185,6 +1227,10 @@ export default defineComponent({
 
   .approval-section {
     .approval-textarea {
+      margin-bottom: 16px;
+    }
+    
+    .download-button-wrapper {
       margin-bottom: 24px;
     }
     
@@ -1259,17 +1305,5 @@ export default defineComponent({
     }
   }
 
-  // 冲突行样式
-  .row-conflict {
-    background-color: #ffe6e6 !important;
-  }
-
-  .table-row.row-conflict {
-    background-color: #ffe6e6 !important;
-    
-    .table-cell {
-      background-color: #ffe6e6 !important;
-    }
-  }
 }
 </style>

@@ -23,7 +23,6 @@ import JInput from '@/components/Form/src/jeecg/components/JInput.vue';
 import JSelectUser from '@/components/Form/src/jeecg/components/JSelectUser.vue';
 import JDictSelectTag from '@/components/Form/src/jeecg/components/JDictSelectTag.vue';
 import Icon from '@/components/Icon';
-import { useMessage } from "@/hooks/web/useMessage";
 import { useRouter } from 'vue-router';
 
   export default defineComponent({
@@ -69,7 +68,6 @@ import { useRouter } from 'vue-router';
       });
       //查询区域表单的ref
       const formRef = ref();
-      const { createMessage } = useMessage();
 
 
       /**

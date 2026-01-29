@@ -330,3 +330,5 @@ aiops:
   dataBaseUrl: http://10.56.190.109:9900/api/open/data-service/%s
   dataApiKey: ab4987ab9674fa8a20b0a20834c6244885b793443bdbdb61f90c74cce3718f49
   alertApiKey: 6bf4493b0f57558320661a645928da919c31bc53448eb2ef379b27806328fedc
+itil:
+  baseUrl: http://10.56.190.193
